@@ -14,5 +14,5 @@ Generate TI4 winner plaques for engraving
    - winner="FUSSEL",
    - date="15-10-2023",
    - winner_icon="Arborec",
-   - runner_up_icons=["Creuss", "Xxcha", "Kekro"],
+   - runner_up_icons=["Creuss", "Xxcha", "Nekro"],
    - output_file=OUTPUT_DIR / "Rnd2.svg"

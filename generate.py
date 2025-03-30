@@ -1,5 +1,6 @@
 import os
 import sys
+import base64
 from pathlib import Path
 
 # Colour Codes
@@ -74,45 +75,63 @@ def find_icon_filename(race_name):
     print_fatal_error(f"No mapping found for {race_name} in {ICON_DIR}")
     return None
 
+def encode_image_to_base64(image_path):
+    """Read an image file and return a Base64 encoded string."""
+    try:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+    except FileNotFoundError:
+        print_fatal_error(f"File not found: {image_path}")
+    except Exception as e:
+        print_fatal_error(f"Error encoding image {image_path}: {e}")
+
 def generate_trophy_plaque(winner, date, winner_icon, runner_up_icons, output_file):
     dwg = svgwrite.Drawing(str(output_file), size=CANVAS_SIZE, profile='tiny')
-    
+
     # Map races to icons
     winner_icon_file = find_icon_filename(winner_icon)
     runner_up_files = [find_icon_filename(icon) for icon in runner_up_icons]
-    
+
     if not winner_icon_file:
         raise FileNotFoundError(f"Winner icon '{winner_icon}' not found.")
     runner_up_files = [icon for icon in runner_up_files if icon is not None]
-    
-    winner_icon_x = 4
-    winner_icon_y = 2
-    
-    text_x = 30
-    text_y_name = 7
-    text_y_date = 11
-    
-    vs_x = 10
-    vs_y = 17
-    
-    runner_up_start_x = 17
-    runner_up_y = 14
-    runner_up_spacing = 10
-    
+
+    # Encode images
+    winner_icon_base64 = encode_image_to_base64(winner_icon_file)
+    runner_up_base64 = [encode_image_to_base64(icon) for icon in runner_up_files]
+
     # Winner icon
-    dwg.add(dwg.image(href=winner_icon_file, insert=(f"{winner_icon_x}mm", f"{winner_icon_y}mm"), size=(f"{ICON_SIZE_WINNER}mm", f"{ICON_SIZE_WINNER}mm")))
+    dwg.add(dwg.image(href=f"data:image/png;base64,{winner_icon_base64}",
+                       insert=(f"{4}mm", f"{2}mm"),
+                       size=(f"{ICON_SIZE_WINNER}mm", f"{ICON_SIZE_WINNER}mm")))
+
     # Winner name
-    dwg.add(dwg.text(winner, insert=(f"{text_x}mm", f"{text_y_name}mm"), font_size=f"{TEXT_FONT_SIZE}mm", font_family="Handel Gothic D", text_anchor="middle", font_weight=TEXT_FONT_WEIGHT))
+    dwg.add(dwg.text(winner, insert=(f"{30}mm", f"{7}mm"),
+                     font_size=f"{TEXT_FONT_SIZE}mm",
+                     font_family="Handel Gothic D",
+                     text_anchor="middle",
+                     font_weight=TEXT_FONT_WEIGHT))
+
     # Date
-    dwg.add(dwg.text(date, insert=(f"{text_x}mm", f"{text_y_date}mm"), font_size=f"{TEXT_FONT_SIZE_DATE}mm", font_family="Handel Gothic D", text_anchor="middle", font_weight=TEXT_FONT_WEIGHT))
+    dwg.add(dwg.text(date, insert=(f"{30}mm", f"{11}mm"),
+                     font_size=f"{TEXT_FONT_SIZE_DATE}mm",
+                     font_family="Handel Gothic D",
+                     text_anchor="middle",
+                     font_weight=TEXT_FONT_WEIGHT))
+
     # "Vs"
-    dwg.add(dwg.text("Vs", insert=(f"{vs_x}mm", f"{vs_y}mm"), font_size=f"{TEXT_FONT_SIZE_DATE}mm", font_family="Handel Gothic D", text_anchor="middle"))
-    
-    # Loser icons
-    for i, icon_file in enumerate(runner_up_files):
-        x_pos = runner_up_start_x + i * runner_up_spacing
-        dwg.add(dwg.image(href=icon_file, insert=(f"{x_pos}mm", f"{runner_up_y}mm"), size=(f"{ICON_SIZE_RUNNER_UP}mm", f"{ICON_SIZE_RUNNER_UP}mm")))
-    
+    dwg.add(dwg.text("Vs", insert=(f"{10}mm", f"{17}mm"),
+                     font_size=f"{TEXT_FONT_SIZE_DATE}mm",
+                     font_family="Handel Gothic D",
+                     text_anchor="middle"))
+
+    # Runner-up icons
+    for i, base64_icon in enumerate(runner_up_base64):
+        x_pos = 17 + i * 10
+        dwg.add(dwg.image(href=f"data:image/png;base64,{base64_icon}",
+                           insert=(f"{x_pos}mm", f"{14}mm"),
+                           size=(f"{ICON_SIZE_RUNNER_UP}mm", f"{ICON_SIZE_RUNNER_UP}mm")))
+
     # Save the SVG
     dwg.save()
     print_info(f"Plaque saved as {output_file}")
@@ -121,19 +140,16 @@ def main():
     print_header(f"Script by: {AUTHOR}{NEWLN}   {EX_USAGE}")
     print_separator()
 
-###
-        
     generate_trophy_plaque(
-        winner="MARSDEN",
-        date="13-08-2023",
-        winner_icon="Jol",
-        runner_up_icons=["Arborec", "Letnev", "Yssaril"],
-        output_file=OUTPUT_DIR / "Rnd1.svg"
+        winner="FUSSEL",
+        date="15-10-2023",
+        winner_icon="Arborec",
+        runner_up_icons=["Creuss", "Xxcha", "Nekro"],
+        output_file=OUTPUT_DIR / "Rnd2.svg"
     )
-    
+
     print_separator()
     print_success("Script reached the end.")
-
 
 if __name__ == "__main__":
     main()

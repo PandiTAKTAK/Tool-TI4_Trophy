@@ -2,6 +2,7 @@ import os
 import sys
 import base64
 from pathlib import Path
+import argparse
 
 # Colour Codes
 RED = '\033[91m'
@@ -19,7 +20,7 @@ RESET = '\033[0m'
 NEWLN = "\n"
 AUTHOR = "Marsden"
 SCRIPT_NAME = os.path.basename(__file__)
-EX_USAGE = f"Usage: Run this script to generate TI4 trophy plaques.{NEWLN}   Example: python {SCRIPT_NAME}"
+EX_USAGE = f"Usage: Run this script to generate TI4 trophy plaques.{NEWLN}   Example: python {SCRIPT_NAME} -w FUSSEL -d DD-MM-YYYY -i Arborec -r Creuss Xxcha Nekro -o filename"
 
 # Paths
 ICON_DIR = Path("_media/TI4_Icons/Black/Race Icons/")
@@ -139,13 +140,24 @@ def generate_trophy_plaque(winner, date, winner_icon, runner_up_icons, output_fi
 def main():
     print_header(f"Script by: {AUTHOR}{NEWLN}   {EX_USAGE}")
     print_separator()
+    
+    parser = argparse.ArgumentParser(description="Generate a TI4 trophy plaque.")
+    parser.add_argument("-w", "--winner", required=True, help="Winner's name")
+    parser.add_argument("-d", "--date", required=True, help="Date of the event")
+    parser.add_argument("-i", "--winner-icon", required=True, help="Winner's race icon")
+    parser.add_argument("-r", "--runner-up-icons", nargs="+", required=True, help="Runner-up race icons")
+    parser.add_argument("-o", "--output-file", required=True, help="Output filename (without extension)")
+
+    args = parser.parse_args()
+
+    output_path = OUTPUT_DIR / f"{args.output_file}.svg"
 
     generate_trophy_plaque(
-        winner="FUSSEL",
-        date="15-10-2023",
-        winner_icon="Arborec",
-        runner_up_icons=["Creuss", "Xxcha", "Nekro"],
-        output_file=OUTPUT_DIR / "Rnd2.svg"
+        winner=args.winner,
+        date=args.date,
+        winner_icon=args.winner_icon,
+        runner_up_icons=args.runner_up_icons,
+        output_file=output_path
     )
 
     print_separator()

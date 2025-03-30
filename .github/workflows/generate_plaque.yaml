@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Python script
         run: |
-          python script.py \
+          python generate.py \
             --winner "${{ github.event.inputs.winner }}" \
             --date "${{ github.event.inputs.date }}" \
             --winner-icon "${{ github.event.inputs.winner_icon }}" \

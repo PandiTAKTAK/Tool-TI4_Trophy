@@ -1,0 +1,52 @@
+name: Generate Trophy Plaque
+
+on:
+  workflow_dispatch:
+    inputs:
+      winner:
+        description: "Winner's name"
+        required: true
+      date:
+        description: "Date"
+        required: true
+      winner_icon:
+        description: "Winner's race"
+        required: true
+      runner_up_icons:
+        description: "Runner-up races (x3)"
+        required: true
+      output_file:
+        description: "Output filename (without extension)"
+        required: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install svgwrite
+
+      - name: Run Python script
+        run: |
+          python script.py \
+            --winner "${{ github.event.inputs.winner }}" \
+            --date "${{ github.event.inputs.date }}" \
+            --winner-icon "${{ github.event.inputs.winner_icon }}" \
+            --runner-up-icons ${{ github.event.inputs.runner_up_icons }} \
+            --output-file "${{ github.event.inputs.output_file }}"
+
+      - name: Upload output
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trophy_Plaque
+          path: outputs/${{ github.event.inputs.output_file }}.svg

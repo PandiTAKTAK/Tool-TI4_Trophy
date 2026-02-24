@@ -18,7 +18,7 @@ AUTHOR = "Marsden"
 SCRIPT_NAME = os.path.basename(__file__)
 EX_USAGE = (
     f"Usage: Run this script to generate TI4 faction draft options.{NEWLN}"
-    f"   Example: python {SCRIPT_NAME} -p4 -c4 --pok --codex --seed 1337 -b Nekro Titans Hacan Jol Sol Empyr Muaat Vuil --names TAKTAK FUSS DERZ PAW"
+    f"   Example: python {SCRIPT_NAME} -p4 -c4 --pok --codex --speaker --seed 1337 -b Nekro Titans Hacan Jol Sol Empyr Muaat Vuil --names TAKTAK FUSS DERZ PAW"
 )
 
 ######################

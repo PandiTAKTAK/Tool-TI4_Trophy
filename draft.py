@@ -25,35 +25,35 @@ EX_USAGE = (
 
 FACTIONS = {
     # Base game
-    "Arborec": {"icon": "Arborec", "expansion": "base"},
-    "Barony of Letnev": {"icon": "Letnev", "expansion": "base"},
-    "Clan of Saar": {"icon": "Saar", "expansion": "base"},
-    "Embers of Muaat": {"icon": "Muaat", "expansion": "base"},
-    "Emirates of Hacan": {"icon": "Hacan", "expansion": "base"},
-    "Federation of Sol": {"icon": "Sol", "expansion": "base"},
-    "Ghosts of Creuss": {"icon": "Creuss", "expansion": "base"},
-    "L1Z1X Mindnet": {"icon": "L1Z1X", "expansion": "base"},
-    "Mentak Coalition": {"icon": "Mentak", "expansion": "base"},
-    "Naalu Collective": {"icon": "Naalu", "expansion": "base"},
-    "Nekro Virus": {"icon": "Nekro", "expansion": "base"},
-    "Sardakk N'orr": {"icon": "Sardakk", "expansion": "base"},
-    "Universities of Jol-Nar": {"icon": "Jol Nar", "expansion": "base"},
-    "Winnu": {"icon": "Winnu", "expansion": "base"},
-    "Xxcha Kingdom": {"icon": "Xxcha", "expansion": "base"},
-    "Yin Brotherhood": {"icon": "Yin", "expansion": "base"},
-    "Yssaril Tribes": {"icon": "Yssaril", "expansion": "base"},
+    "Arborec": {"icon": "Arborec", "slug": "ab", "expansion": "base"},
+    "Barony of Letnev": {"icon": "Letnev", "slug": "bl", "expansion": "base"},
+    "Clan of Saar": {"icon": "Saar", "slug": "cs", "expansion": "base"},
+    "Embers of Muaat": {"icon": "Muaat", "slug": "mu", "expansion": "base"},
+    "Emirates of Hacan": {"icon": "Hacan", "slug": "eh", "expansion": "base"},
+    "Federation of Sol": {"icon": "Sol", "slug": "fs", "expansion": "base"},
+    "Ghosts of Creuss": {"icon": "Creuss", "slug": "gc", "expansion": "base"},
+    "L1Z1X Mindnet": {"icon": "L1Z1X", "slug": "lm", "expansion": "base"},
+    "Mentak Coalition": {"icon": "Mentak", "slug": "mc", "expansion": "base"},
+    "Naalu Collective": {"icon": "Naalu", "slug": "nc", "expansion": "base"},
+    "Nekro Virus": {"icon": "Nekro", "slug": "nv", "expansion": "base"},
+    "Sardakk N'orr": {"icon": "Sardakk", "slug": "sn", "expansion": "base"},
+    "Universities of Jol-Nar": {"icon": "Jol Nar", "slug": "jn", "expansion": "base"},
+    "Winnu": {"icon": "Winnu", "slug": "wn", "expansion": "base"},
+    "Xxcha Kingdom": {"icon": "Xxcha", "slug": "xk", "expansion": "base"},
+    "Yin Brotherhood": {"icon": "Yin", "slug": "yb", "expansion": "base"},
+    "Yssaril Tribes": {"icon": "Yssaril", "slug": "yt", "expansion": "base"},
 
     # PoK
-    "Argent Flight": {"icon": "Argent", "expansion": "pok"},
-    "Empyrean": {"icon": "Empyrean", "expansion": "pok"},
-    "Mahact Gene-Sorcerers": {"icon": "Mahact", "expansion": "pok"},
-    "Naaz-Rokha Alliance": {"icon": "Naaz-Rokha", "expansion": "pok"},
-    "Nomad": {"icon": "Nomad", "expansion": "pok"},
-    "Titans of Ul": {"icon": "Titans", "expansion": "pok"},
-    "Vuil'Raith Cabal": {"icon": "Vuil'Raith", "expansion": "pok"},
+    "Argent Flight": {"icon": "Argent", "slug": "af", "expansion": "pok"},
+    "Empyrean": {"icon": "Empyrean", "slug": "em", "expansion": "pok"},
+    "Mahact Gene-Sorcerers": {"icon": "Mahact", "slug": "mg", "expansion": "pok"},
+    "Naaz-Rokha Alliance": {"icon": "Naaz-Rokha", "slug": "nr", "expansion": "pok"},
+    "Nomad": {"icon": "Nomad", "slug": "no", "expansion": "pok"},
+    "Titans of Ul": {"icon": "Titans", "slug": "tu", "expansion": "pok"},
+    "Vuil'Raith Cabal": {"icon": "Vuil'Raith", "slug": "vc", "expansion": "pok"},
 
     # Codex
-    "Council Keleres": {"icon": "Keleres", "expansion": "codex"},
+    "Council Keleres": {"icon": "Keleres", "slug": "ck", "expansion": "codex"},
 }
 
 ######################
@@ -109,6 +109,16 @@ def generate_draft(players, choices_per_player, factions, banned, seed=None):
         index += choices_per_player
     return draft
 
+def generate_faction_url(factions):
+    slugs = [FACTIONS[f]["slug"] for f in factions]
+    return "https://ti4.basicallyfine.com/factions/" + ",".join(slugs) + ";ti-c3"
+    # Need to fix the above for non POK and Codex - Meh
+    
+def select_speaker(players):
+    speaker = random.choice(list(players))
+    print_success(f"Speaker -> {speaker}")
+    return speaker
+
 ######################
 
 def main():
@@ -123,6 +133,7 @@ def main():
     parser.add_argument("--codex", action="store_true")
     parser.add_argument("--seed", type=int)
     parser.add_argument("-n", "--names", nargs="*")
+    parser.add_argument("-s", "--speaker", action="store_true")
     args = parser.parse_args()
 
     faction_pool = build_faction_pool(args.pok, args.codex)
@@ -154,14 +165,24 @@ def main():
             )
         else:
             print_success(
-                f"Using ({args.names}) "
+                f"Using -> ({args.names}) "
             )
             draft = {name: options for name, options in zip(args.names, draft.values())}
 
+    # RN-Jesus already set globally for seed
+    speaker = None
+    if args.speaker:
+        print_separator()
+        speaker = select_speaker(draft.keys())
+        print_separator()
+
     for player, options in draft.items():
-        print_info(f"{player}")
+        tag = " (Speaker)" if player == speaker else ""
+        print_info(f"{player}{tag}")
         for f in options:
             print_info(f"  - {f}")
+        url = generate_faction_url(options)
+        print_success(f"  View picks -> {url}")
 
     print_separator()
     

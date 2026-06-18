@@ -198,9 +198,9 @@ select option{background:var(--space-3)}
 </header>
 
 <nav>
-  <button class="tab-btn active" onclick="showTab('trophy',this)">&#9670; Trophy Hall</button>
-  <button class="tab-btn" onclick="showTab('draft',this)">&#9632; Draft</button>
+  <button class="tab-btn active" onclick="showTab('draft',this)">&#9632; Draft</button>
   <button class="tab-btn" onclick="showTab('plaque',this)">&#9654; New Plaque</button>
+  <button class="tab-btn" onclick="showTab('trophy',this)">&#9670; Trophy Hall</button>
 </nav>
 
 <!-- TROPHY HALL -->
@@ -257,8 +257,9 @@ select option{background:var(--space-3)}
     <div class="factions-grid" id="ban-grid"></div>
   </div>
   <div class="btn-row">
-    <button class="btn" onclick="runDraft()">Generate Draft</button>
-    <button class="btn btn-danger" onclick="clearBans()">Clear Bans</button>
+	<button class="btn" onclick="runDraft()">Generate Draft</button>
+	<button class="btn" onclick="settingsToHash();copyHash()">Share Settings</button>
+	<button class="btn btn-danger" onclick="clearBans()">Clear Bans</button>
   </div>
   <div id="draft-results"></div>
 </div>
@@ -363,6 +364,12 @@ function blackPathByName(name){
   return ICON_BLACK+(f?f.black:name+' black.png');
 }
 
+function copyHash(){
+  navigator.clipboard.writeText(window.location.href)
+    .then(()=>{ document.getElementById('draft-results').innerHTML='<div class="success-msg">Link copied to clipboard.</div>'; })
+    .catch(()=>{ document.getElementById('draft-results').innerHTML=`<div class="success-msg">Copy this link: ${window.location.href}</div>`; });
+}
+
 /* Stars */
 (function(){
   const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');let stars=[];
@@ -401,6 +408,39 @@ function buildTrophySlots(){
     el.onclick=()=>selectPlaque(rnd);
     container.appendChild(el);
   });
+}
+
+function settingsToHash(){
+  const params={
+    p:document.getElementById('player-count').value,
+    c:document.getElementById('choices-count').value,
+    n:document.getElementById('player-names').value.trim(),
+    s:document.getElementById('seed-val').value.trim(),
+    pok:document.getElementById('inc-pok').checked?1:0,
+    codex:document.getElementById('inc-codex').checked?1:0,
+    speaker:document.getElementById('inc-speaker').checked?1:0,
+    banned:[...banned].join(','),
+  };
+  window.location.hash = btoa(JSON.stringify(params));
+}
+
+function loadFromHash(){
+  if(!window.location.hash) return;
+  try{
+    const params=JSON.parse(atob(window.location.hash.slice(1)));
+    if(params.p) document.getElementById('player-count').value=params.p;
+    if(params.c) document.getElementById('choices-count').value=params.c;
+    if(params.n) document.getElementById('player-names').value=params.n;
+    if(params.s) document.getElementById('seed-val').value=params.s;
+    document.getElementById('inc-pok').checked=!!params.pok;
+    document.getElementById('inc-codex').checked=!!params.codex;
+    document.getElementById('inc-speaker').checked=!!params.speaker;
+    if(params.banned) params.banned.split(',').filter(Boolean).forEach(f=>banned.add(f));
+    buildBanGrid();
+    /* Switch to draft tab and run */
+    showTab('draft', document.querySelector('.tab-btn:nth-child(2)'));
+    runDraft();
+  } catch(e){ console.warn('Could not load settings from URL',e); }
 }
 
 function selectPlaque(rnd){
@@ -550,7 +590,7 @@ function runDraft(){
   }
   rng.shuffle(pool);
   const shuffled=pool;
-  const speakerIdx=withSpeaker?Math.floor(rng()*players):-1;
+  const speakerIdx=withSpeaker?Math.floor(rng.random()*players):-1;
   let html=`<div class="divider"></div><div class="section-title">Draft Results</div>
     <div class="seed-display">Seed: <span>${seed}</span></div><br>`;
   for(let i=0;i<players;i++){
@@ -582,7 +622,10 @@ function populateSelects(){
     [wf,rf].forEach(sel=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o)});
   });
 }
+
 populateSelects();
+buildBanGrid();
+loadFromHash();
 
 /* Plaque SVG — uses Black icons to match generate.py output for laser engraving */
 let _lastSVG='';

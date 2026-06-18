@@ -204,7 +204,7 @@ select option{background:var(--space-3)}
 </nav>
 
 <!-- TROPHY HALL -->
-<div class="panel active" id="tab-trophy">
+<div class="panel" id="tab-trophy">
   <div class="trophy-scene">
     <div class="hex-trophy">
       <div class="base-face">
@@ -223,7 +223,7 @@ select option{background:var(--space-3)}
 </div>
 
 <!-- DRAFT -->
-<div class="panel" id="tab-draft">
+<div class="panel active" id="tab-draft">
   <div class="section-title">Session Setup</div>
   <div class="draft-grid">
     <div class="field-group">
@@ -438,7 +438,7 @@ function loadFromHash(){
     if(params.banned) params.banned.split(',').filter(Boolean).forEach(f=>banned.add(f));
     buildBanGrid();
     /* Switch to draft tab and run */
-    showTab('draft', document.querySelector('.tab-btn:nth-child(2)'));
+    showTab('draft', document.querySelector('[onclick*="draft"]'));
     runDraft();
   } catch(e){ console.warn('Could not load settings from URL',e); }
 }
@@ -566,7 +566,15 @@ function pyRandom(seed) {
   }
   return {
     random() { const a=genrand()>>>5, b=genrand()>>>6; return (a*67108864+b)*(1/9007199254740992); },
-    shuffle(arr) { for (let i=arr.length-1;i>0;i--) { const j=Math.floor(this.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } }
+    shuffle(arr) {
+	  for (let i = arr.length - 1; i > 0; i--) {
+		const n = i + 1;
+		const k = 32 - Math.clz32(n);  // n.bit_length()
+		let r;
+		do { r = genrand() >>> (32 - k); } while (r >= n);
+		[arr[i], arr[r]] = [arr[r], arr[i]];
+	  }
+	}
   };
 }
 function runDraft(){

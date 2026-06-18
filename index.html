@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TI4 Trophy Hall</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Share+Tech+Mono&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#c9a84c;--gold-light:#e8c96a;--gold-dark:#8a6a1e;
+  --space:#07090f;--space-2:#0d1120;--space-3:#141828;
+  --text:#e8e4d9;--text-muted:#9a95a8;--red-light:#c0392b;
+  --border:rgba(201,168,76,0.25);
+}
+html,body{height:100%;background:var(--space);color:var(--text);font-family:'Cinzel',Georgia,serif;overflow-x:hidden}
+@font-face{font-family:'Handel Gothic D';src:url('_media/Handel Gothic D Bold.otf') format('opentype');font-weight:bold}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(26,14,46,0.6) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(8,20,50,0.5) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+#stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+header{text-align:center;padding:2.5rem 1rem 1.5rem;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(201,168,76,0.06) 0%,transparent 100%)}
+header h1{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,4vw,2.6rem);
+  color:var(--gold);letter-spacing:.12em;text-shadow:0 0 40px rgba(201,168,76,0.3);line-height:1.2}
+header p{font-size:.75rem;color:var(--text-muted);letter-spacing:.22em;text-transform:uppercase;
+  margin-top:.5rem;font-family:'Share Tech Mono',monospace}
+nav{display:flex;border-bottom:1px solid var(--border);background:var(--space-2)}
+.tab-btn{flex:1;padding:1rem;background:none;border:none;color:var(--text-muted);
+  font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.15em;cursor:pointer;
+  transition:all .2s;border-bottom:2px solid transparent;text-transform:uppercase}
+.tab-btn:hover{color:var(--gold);background:rgba(201,168,76,0.04)}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,0.06)}
+.panel{display:none;flex:1;padding:2rem 1rem;max-width:1000px;margin:0 auto;width:100%}
+.panel.active{display:block}
+.field-group{display:flex;flex-direction:column;gap:.4rem}
+label{font-size:.68rem;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+input[type=text],input[type=number],select{background:var(--space-3);border:1px solid var(--border);
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.9rem;padding:.6rem .9rem;
+  border-radius:4px;outline:none;transition:border-color .2s;width:100%}
+input:focus,select:focus{border-color:var(--gold)}
+select option{background:var(--space-3)}
+.checkbox-row{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.3rem}
+.check-item{display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.8rem;color:var(--text-muted)}
+.check-item input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;cursor:pointer}
+.check-item:hover{color:var(--text)}
+.section-title{font-size:.68rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;
+  border-bottom:1px solid var(--border);padding-bottom:.5rem;margin-bottom:1rem}
+.btn{display:inline-block;padding:.72rem 2rem;background:transparent;border:1px solid var(--gold);
+  color:var(--gold);font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.18em;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:3px}
+.btn:hover{background:rgba(201,168,76,0.1);box-shadow:0 0 20px rgba(201,168,76,0.12)}
+.btn:active{transform:scale(.98)}
+.btn-danger{border-color:var(--red-light);color:var(--red-light)}
+.btn-danger:hover{background:rgba(192,57,43,0.15)}
+.btn-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+.error-msg{color:#c0392b;font-size:.75rem;letter-spacing:.08em;font-family:'Share Tech Mono',monospace;margin-top:.5rem}
+.success-msg{color:#27ae60;font-size:.75rem;letter-spacing:.08em;font-family:'Share Tech Mono',monospace;margin-top:.5rem}
+
+/* TROPHY */
+.trophy-scene{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 1.5rem}
+.hex-trophy{
+  position:relative;width:400px;max-width:100%;
+  animation:base-rock 6s ease-in-out infinite;
+  filter:drop-shadow(0 12px 24px rgba(0,0,0,0.6))
+}
+@keyframes base-rock{
+  0%,100%{transform:perspective(700px) rotateX(5deg) rotateY(-3deg)}
+  50%{transform:perspective(700px) rotateX(7deg) rotateY(3deg)}}
+.hex-trophy:hover{animation-play-state:paused}
+.base-face{
+  background:linear-gradient(160deg,#221a08 0%,#0f0b04 60%,#080600 100%);
+  border:1px solid rgba(201,168,76,0.45);
+  border-radius:4px 4px 6px 6px;
+  padding:20px 22px 26px;
+  box-shadow:
+    0 10px 0 #040300,
+    0 11px 0 rgba(201,168,76,0.12),
+    inset 0 1px 0 rgba(201,168,76,0.12),
+    inset 0 0 40px rgba(0,0,0,0.4)
+}
+.base-engraving-title{
+  text-align:center;font-size:.58rem;letter-spacing:.38em;color:var(--gold-dark);
+  text-transform:uppercase;margin-bottom:14px;font-family:'Share Tech Mono',monospace;
+  border-bottom:1px solid rgba(201,168,76,0.18);padding-bottom:10px
+}
+.plaque-slots{display:flex;flex-direction:column;gap:7px}
+.plaque-slot{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border:1px solid rgba(201,168,76,0.2);border-radius:3px;cursor:pointer;
+  transition:all .18s;background:rgba(0,0,0,0.3);min-height:40px;overflow:hidden;
+  position:relative;
+}
+.plaque-slot::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--gold-dark);opacity:0;transition:opacity .18s
+}
+.plaque-slot:hover{border-color:rgba(201,168,76,0.55);background:rgba(201,168,76,0.05)}
+.plaque-slot:hover::after{opacity:1}
+.plaque-slot.active{
+  border-color:var(--gold);background:rgba(201,168,76,0.09);
+  box-shadow:inset 0 0 16px rgba(201,168,76,0.07)
+}
+.plaque-slot.active::after{opacity:1;background:var(--gold)}
+.slot-rnd{font-size:.62rem;letter-spacing:.14em;color:var(--gold-dark);
+  font-family:'Share Tech Mono',monospace;white-space:nowrap;min-width:36px}
+.slot-icon{width:24px;height:24px;object-fit:contain;flex-shrink:0}
+.slot-winner{font-size:.8rem;letter-spacing:.12em;color:var(--gold-light);flex:1}
+.slot-date{font-size:.58rem;color:var(--text-muted);font-family:'Share Tech Mono',monospace;white-space:nowrap}
+.base-plinth{
+  width:340px;max-width:90%;margin:0 auto;height:16px;
+  background:linear-gradient(180deg,#050400 0%,#0a0800 100%);
+  border:1px solid rgba(201,168,76,0.2);border-top:none;
+  border-radius:0 0 10px 10px;
+  box-shadow:0 5px 0 #030200,0 6px 0 rgba(201,168,76,0.07)
+}
+.trophy-legend{text-align:center;font-size:.62rem;letter-spacing:.14em;
+  color:var(--text-muted);margin-top:1rem;font-family:'Share Tech Mono',monospace}
+
+/* PLAQUE DETAIL */
+.plaque-detail{width:100%;max-width:580px;margin:1.5rem auto 0;
+  border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--space-2)}
+.plaque-detail-empty{padding:2rem;text-align:center;color:var(--text-muted);
+  font-size:.75rem;letter-spacing:.12em}
+.plaque-svg-wrap{padding:1.5rem;border-bottom:1px solid var(--border);
+  background:#fff;display:flex;justify-content:center;align-items:center;min-height:90px}
+.plaque-svg-wrap svg,.plaque-svg-wrap img{max-width:100%;height:auto;display:block}
+.plaque-meta{padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;
+  border-bottom:1px solid var(--border)}
+.plaque-meta-icon{width:44px;height:44px;object-fit:contain}
+.plaque-meta-winner{font-size:1.15rem;color:var(--gold);letter-spacing:.1em}
+.plaque-meta-date{font-size:.68rem;color:var(--text-muted);letter-spacing:.14em;
+  font-family:'Share Tech Mono',monospace;margin-top:.2rem}
+.plaque-runners{padding:1rem 1.5rem}
+.runners-label{font-size:.62rem;letter-spacing:.2em;color:var(--text-muted);
+  text-transform:uppercase;margin-bottom:.6rem}
+.runner-chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.runner-chip{display:flex;align-items:center;gap:.5rem;padding:.32rem .7rem;
+  border:1px solid var(--border);border-radius:3px;font-size:.68rem;color:var(--text-muted)}
+.runner-chip img{width:20px;height:20px;object-fit:contain}
+
+/* DRAFT */
+.draft-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+@media(max-width:600px){.draft-grid,.gen-grid{grid-template-columns:1fr}}
+.factions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.4rem;
+  max-height:200px;overflow-y:auto;border:1px solid var(--border);
+  border-radius:4px;padding:.6rem;background:var(--space-3)}
+.faction-chip{display:flex;align-items:center;gap:.45rem;padding:.32rem .55rem;
+  border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:.62rem;
+  letter-spacing:.07em;color:var(--text-muted);transition:all .18s;background:transparent;
+  text-align:left;width:100%}
+.faction-chip img{width:20px;height:20px;object-fit:contain;flex-shrink:0}
+.faction-chip:hover{border-color:var(--gold);color:var(--gold)}
+.faction-chip.banned{background:rgba(192,57,43,0.2);border-color:var(--red-light);color:var(--red-light)}
+.player-card{background:var(--space-2);border:1px solid var(--border);
+  border-radius:5px;padding:1.1rem 1.25rem;margin-bottom:.9rem}
+.player-card.speaker{border-color:var(--gold);box-shadow:0 0 18px rgba(201,168,76,0.08)}
+.player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
+.player-name{font-size:.95rem;letter-spacing:.1em}
+.speaker-badge{font-size:.58rem;letter-spacing:.14em;color:var(--gold);
+  border:1px solid var(--gold-dark);padding:.18rem .55rem;border-radius:2px}
+.faction-picks{display:flex;flex-wrap:wrap;gap:.4rem}
+.pick-item{display:flex;align-items:center;gap:.45rem;padding:.35rem .65rem;
+  background:var(--space-3);border:1px solid var(--border);border-radius:3px;
+  font-size:.68rem;color:var(--text-muted)}
+.pick-item img{width:22px;height:22px;object-fit:contain}
+.seed-display{font-family:'Share Tech Mono',monospace;font-size:.72rem;
+  color:var(--text-muted);text-align:center;margin-top:.4rem}
+.seed-display span{color:var(--gold-light)}
+.ti4-link{font-size:.62rem;color:var(--gold-dark);text-decoration:none;
+  letter-spacing:.09em;display:inline-block;margin-top:.45rem}
+.ti4-link:hover{color:var(--gold)}
+
+/* PLAQUE GEN */
+.gen-panel{background:var(--space-2);border:1px solid var(--border);
+  border-radius:6px;padding:1.4rem;margin-bottom:1.5rem}
+.gen-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+#plaque-preview{margin-top:1.25rem;border:1px solid var(--border);border-radius:4px;
+  background:#fff;display:flex;align-items:center;justify-content:center;
+  padding:1.25rem;min-height:90px}
+#plaque-preview svg{max-width:100%;height:auto}
+.preview-placeholder{font-size:.75rem;color:#aaa;letter-spacing:.1em}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--space-2)}
+::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:2px}
+</style>
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<div class="app">
+
+<header>
+  <h1>Twilight Imperium IV</h1>
+  <p>Trophy Hall &amp; Draft Generator</p>
+</header>
+
+<nav>
+  <button class="tab-btn active" onclick="showTab('trophy',this)">&#9670; Trophy Hall</button>
+  <button class="tab-btn" onclick="showTab('draft',this)">&#9632; Draft</button>
+  <button class="tab-btn" onclick="showTab('plaque',this)">&#9654; New Plaque</button>
+</nav>
+
+<!-- TROPHY HALL -->
+<div class="panel active" id="tab-trophy">
+  <div class="trophy-scene">
+    <div class="hex-trophy">
+      <div class="base-face">
+        <div class="base-engraving-title">Triumphant Commanders</div>
+        <div class="plaque-slots" id="plaque-slots">
+          <div style="font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;padding:.5rem 0">Loading plaques&hellip;</div>
+        </div>
+      </div>
+      <div class="base-plinth"></div>
+    </div>
+    <div class="trophy-legend">Click a plaque to inspect &nbsp;&bull;&nbsp; Hover to pause rotation</div>
+  </div>
+  <div class="plaque-detail" id="plaque-detail">
+    <div class="plaque-detail-empty">Select a plaque from the trophy above</div>
+  </div>
+</div>
+
+<!-- DRAFT -->
+<div class="panel" id="tab-draft">
+  <div class="section-title">Session Setup</div>
+  <div class="draft-grid">
+    <div class="field-group">
+      <label>Number of Players</label>
+      <input type="number" id="player-count" value="4" min="2" max="8">
+    </div>
+    <div class="field-group">
+      <label>Choices Per Player</label>
+      <input type="number" id="choices-count" value="4" min="1" max="8">
+    </div>
+    <div class="field-group">
+      <label>Player Names (comma-separated)</label>
+      <input type="text" id="player-names" placeholder="TAKTAK, FUSS, DERZ, PAW">
+    </div>
+    <div class="field-group">
+      <label>Seed (blank = random)</label>
+      <input type="number" id="seed-val" placeholder="e.g. 1337">
+    </div>
+  </div>
+  <div class="field-group" style="margin-bottom:1.1rem">
+    <label>Expansions &amp; Options</label>
+    <div class="checkbox-row">
+      <label class="check-item"><input type="checkbox" checked disabled> Base Game</label>
+      <label class="check-item"><input type="checkbox" id="inc-pok"> Prophecy of Kings</label>
+      <label class="check-item"><input type="checkbox" id="inc-codex"> Codex (Keleres)</label>
+      <label class="check-item"><input type="checkbox" id="inc-speaker"> Pick Speaker</label>
+    </div>
+  </div>
+  <div class="field-group" style="margin-bottom:1.4rem">
+    <label>Ban Factions &mdash; click to toggle</label>
+    <div class="factions-grid" id="ban-grid"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="runDraft()">Generate Draft</button>
+    <button class="btn btn-danger" onclick="clearBans()">Clear Bans</button>
+  </div>
+  <div id="draft-results"></div>
+</div>
+
+<!-- NEW PLAQUE -->
+<div class="panel" id="tab-plaque">
+  <div class="section-title">Generate Plaque SVG</div>
+  <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:1.4rem;line-height:1.7;letter-spacing:.05em">
+    Fill in the details to preview and download an engraving-ready SVG.
+  </p>
+  <div class="gen-panel">
+    <div class="gen-grid">
+      <div class="field-group">
+        <label>Winner Name</label>
+        <input type="text" id="gen-winner" placeholder="e.g. MARSDEN">
+      </div>
+      <div class="field-group">
+        <label>Date (DD-MM-YYYY)</label>
+        <input type="text" id="gen-date" placeholder="13-08-2023">
+      </div>
+      <div class="field-group">
+        <label>Winner Faction</label>
+        <select id="gen-winner-faction"></select>
+      </div>
+      <div class="field-group">
+        <label>Runner-up Factions (Ctrl/Cmd multi-select)</label>
+        <select id="gen-runners" multiple style="height:108px"></select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="previewPlaque()">Preview</button>
+      <button class="btn" onclick="downloadPlaque()">Download SVG</button>
+    </div>
+    <div id="gen-msg"></div>
+  </div>
+  <div id="plaque-preview"><div class="preview-placeholder">Preview will appear here</div></div>
+</div>
+
+</div>
+<script>
+/* Paths relative to repo root — works on GitHub Pages served from root */
+const ICON_BLACK = '_media/TI4_Icons/Black/Race Icons/';
+const ICON_COLOR = '_media/TI4_Icons/Color/Race Icons/';
+const OUTPUTS_DIR = 'outputs/';
+
+/* Add new entries here after each game */
+const ROUND_FILES = ['Rnd1','Rnd2','Rnd3','Rnd4','Rnd5'];
+
+const ROUND_META = {
+  Rnd1:{winner:'MARSDEN',winner_icon:'Jol Nar',date:'13-08-2023',runners:['Arborec','Letnev','Yssaril']},
+  Rnd2:{winner:'FUSSEL', winner_icon:'Arborec', date:'15-10-2023',runners:['Creuss','Xxcha','Nekro']},
+  Rnd3:{winner:'DERZ',   winner_icon:'Sol',     date:'03-12-2023',runners:['Hacan','Saar','Yin']},
+  Rnd4:{winner:'TAKTAK', winner_icon:'Mahact',  date:'18-02-2024',runners:['Empyrean','Nekro','Yssaril']},
+  Rnd5:{winner:'FUSSEL', winner_icon:'Nekro',   date:'12-05-2024',runners:['Muaat','Hacan','Sol']},
+};
+
+/* icon key -> exact filename (without path) for Black and Color sets.
+   Black icons have ' black' suffix; Keleres is the exception with no suffix.
+   Color icons have no suffix; Jol Nar keeps its space. */
+const FACTIONS = {
+  "Arborec":                {black:"Arborec black.png",    color:"Arborec.png",    slug:"ab",expansion:"base"},
+  "Barony of Letnev":       {black:"Letnev black.png",     color:"Letnev.png",     slug:"bl",expansion:"base"},
+  "Clan of Saar":           {black:"Saar black.png",       color:"Saar.png",       slug:"cs",expansion:"base"},
+  "Embers of Muaat":        {black:"Muaat black.png",      color:"Muaat.png",      slug:"mu",expansion:"base"},
+  "Emirates of Hacan":      {black:"Hacan black.png",      color:"Hacan.png",      slug:"eh",expansion:"base"},
+  "Federation of Sol":      {black:"Sol black.png",        color:"Sol.png",        slug:"fs",expansion:"base"},
+  "Ghosts of Creuss":       {black:"Creuss black.png",     color:"Creuss.png",     slug:"gc",expansion:"base"},
+  "L1Z1X Mindnet":          {black:"L1Z1X black.png",      color:"L1Z1X.png",      slug:"lm",expansion:"base"},
+  "Mentak Coalition":       {black:"Mentak black.png",     color:"Mentak.png",     slug:"mc",expansion:"base"},
+  "Naalu Collective":       {black:"Naalu black.png",      color:"Naalu.png",      slug:"nc",expansion:"base"},
+  "Nekro Virus":            {black:"Nekro black.png",      color:"Nekro.png",      slug:"nv",expansion:"base"},
+  "Sardakk N'orr":          {black:"Sardakk black.png",    color:"Sardakk.png",    slug:"sn",expansion:"base"},
+  "Universities of Jol-Nar":{black:"Jol Nar black.png",   color:"Jol Nar.png",    slug:"jn",expansion:"base"},
+  "Winnu":                  {black:"Winnu black.png",      color:"Winnu.png",      slug:"wn",expansion:"base"},
+  "Xxcha Kingdom":          {black:"Xxcha black.png",      color:"Xxcha.png",      slug:"xk",expansion:"base"},
+  "Yin Brotherhood":        {black:"Yin black.png",        color:"Yin.png",        slug:"yb",expansion:"base"},
+  "Yssaril Tribes":         {black:"Yssaril black.png",    color:"Yssaril.png",    slug:"yt",expansion:"base"},
+  "Argent Flight":          {black:"Argent black.png",     color:"Argent.png",     slug:"af",expansion:"pok"},
+  "Empyrean":               {black:"Empyrean black.png",   color:"Empyrean.png",   slug:"em",expansion:"pok"},
+  "Mahact Gene-Sorcerers":  {black:"Mahact black.png",     color:"Mahact.png",     slug:"mg",expansion:"pok"},
+  "Naaz-Rokha Alliance":    {black:"Naaz-Rokha black.png", color:"Naaz-Rokha.png", slug:"nr",expansion:"pok"},
+  "Nomad":                  {black:"Nomad black.png",      color:"Nomad.png",      slug:"no",expansion:"pok"},
+  "Titans of Ul":           {black:"Titans black.png",     color:"Titans.png",     slug:"tu",expansion:"pok"},
+  "Vuil'Raith Cabal":       {black:"Vuil'Raith black.png", color:"Vuil'Raith.png", slug:"vc",expansion:"pok"},
+  "Council Keleres":        {black:"Keleres.png",          color:"Keleres.png",    slug:"ck",expansion:"codex"},
+};
+
+/* icon name (as used in ROUND_META) -> faction entry */
+function factionByIcon(iconName){
+  return Object.values(FACTIONS).find(f=>f.black.startsWith(iconName));
+}
+function blackPath(iconName){
+  const f=factionByIcon(iconName);
+  return ICON_BLACK+(f?f.black:iconName+' black.png');
+}
+function colorPath(name){
+  const f=FACTIONS[name];
+  return ICON_COLOR+(f?f.color:name+'.png');
+}
+function blackPathByName(name){
+  const f=FACTIONS[name];
+  return ICON_BLACK+(f?f.black:name+' black.png');
+}
+
+/* Stars */
+(function(){
+  const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');let stars=[];
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;stars=[];
+    for(let i=0;i<240;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,
+      r:Math.random()*1.4+.2,a:Math.random(),s:Math.random()*.0025+.0008})}
+  function draw(){ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.a+=s.s;
+    if(s.a>1||s.a<0)s.s*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,2*Math.PI);
+    ctx.fillStyle=`rgba(232,228,217,${s.a})`;ctx.fill()});requestAnimationFrame(draw)}
+  resize();window.addEventListener('resize',resize);draw();
+})();
+
+/* Tabs */
+function showTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');btn.classList.add('active');
+}
+
+/* Trophy Hall */
+function buildTrophySlots(){
+  const container=document.getElementById('plaque-slots');
+  container.innerHTML='';
+  ROUND_FILES.forEach(rnd=>{
+    const meta=ROUND_META[rnd];
+    const el=document.createElement('div');
+    el.className='plaque-slot';el.id='slot-'+rnd;
+    if(meta){
+      el.innerHTML=`<span class="slot-rnd">${rnd}</span>
+        <img class="slot-icon" src="${blackPath(meta.winner_icon)}" alt="${meta.winner_icon}" onerror="this.style.visibility='hidden'">
+        <span class="slot-winner">${meta.winner}</span>
+        <span class="slot-date">${meta.date}</span>`;
+    } else {
+      el.innerHTML=`<span class="slot-rnd">${rnd}</span><span class="slot-winner" style="color:var(--text-muted)">Unknown</span>`;
+    }
+    el.onclick=()=>selectPlaque(rnd);
+    container.appendChild(el);
+  });
+}
+
+function selectPlaque(rnd){
+  document.querySelectorAll('.plaque-slot').forEach(s=>s.classList.remove('active'));
+  const slot=document.getElementById('slot-'+rnd);if(slot)slot.classList.add('active');
+  const detail=document.getElementById('plaque-detail');
+  const meta=ROUND_META[rnd];
+  detail.innerHTML=`
+    <div class="plaque-svg-wrap" id="svg-wrap-${rnd}">
+      <div style="font-size:.72rem;color:#888;letter-spacing:.1em">Loading ${rnd}.svg&hellip;</div>
+    </div>
+    ${meta?`
+    <div class="plaque-meta">
+      <img class="plaque-meta-icon" src="${blackPath(meta.winner_icon)}" alt="${meta.winner_icon}" onerror="this.style.display='none'">
+      <div>
+        <div class="plaque-meta-winner">${meta.winner}</div>
+        <div class="plaque-meta-date">&#9632; ${meta.date} &nbsp;&bull;&nbsp; ${rnd}</div>
+      </div>
+    </div>
+    <div class="plaque-runners">
+      <div class="runners-label">Runner-ups</div>
+      <div class="runner-chips">
+        ${meta.runners.map(r=>{
+          const fe=Object.entries(FACTIONS).find(([,d])=>d.black.startsWith(r));
+          return `<div class="runner-chip">
+            <img src="${blackPath(r)}" alt="${r}" onerror="this.style.display='none'">
+            <span>${fe?fe[0]:r}</span></div>`;
+        }).join('')}
+      </div>
+    </div>`:''}`;
+
+  fetch(OUTPUTS_DIR+rnd+'.svg')
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.text()})
+    .then(svgText=>{
+      const wrap=document.getElementById('svg-wrap-'+rnd);if(!wrap)return;
+      const parser=new DOMParser();
+      const doc=parser.parseFromString(svgText,'image/svg+xml');
+      const svgEl=doc.querySelector('svg');
+      if(svgEl){
+        svgEl.removeAttribute('width');svgEl.removeAttribute('height');
+        svgEl.style.cssText='max-width:100%;height:auto;display:block';
+        wrap.innerHTML='';wrap.appendChild(svgEl);
+      }
+    })
+    .catch(()=>{
+      const wrap=document.getElementById('svg-wrap-'+rnd);
+      if(wrap)wrap.innerHTML=`<div style="font-size:.7rem;color:#888;letter-spacing:.08em">Could not load ${rnd}.svg</div>`;
+    });
+}
+
+buildTrophySlots();
+
+/* Draft bans — use Color icons in the UI, they look better on dark bg */
+const banned=new Set();
+function buildBanGrid(){
+  const grid=document.getElementById('ban-grid');grid.innerHTML='';
+  Object.entries(FACTIONS).forEach(([name,data])=>{
+    const el=document.createElement('button');el.className='faction-chip';
+    el.innerHTML=`<img src="${ICON_COLOR+data.color}" alt="${name}" onerror="this.style.display='none'"><span>${name.split(' ')[0]}</span>`;
+    el.onclick=()=>{if(banned.has(name)){banned.delete(name);el.classList.remove('banned')}
+      else{banned.add(name);el.classList.add('banned')}};
+    grid.appendChild(el);
+  });
+}
+function clearBans(){banned.clear();document.querySelectorAll('.faction-chip').forEach(c=>c.classList.remove('banned'))}
+buildBanGrid();
+
+/* Draft RNG */
+function seededRng(seed){
+  let s=seed%2147483647;if(s<=0)s+=2147483646;
+  return()=>{s=s*16807%2147483647;return(s-1)/2147483646};
+}
+function shuffle(arr,rng){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+function runDraft(){
+  const players=parseInt(document.getElementById('player-count').value);
+  const choices=parseInt(document.getElementById('choices-count').value);
+  const nameStr=document.getElementById('player-names').value.trim();
+  const defaultNames=['TAKTAK','FUSS','DERZ','PAW'];
+  const names=nameStr?nameStr.split(',').map(n=>n.trim()).filter(Boolean):defaultNames.slice(0,players);
+  const withPok=document.getElementById('inc-pok').checked;
+  const withCodex=document.getElementById('inc-codex').checked;
+  const withSpeaker=document.getElementById('inc-speaker').checked;
+  const seedInput=document.getElementById('seed-val').value.trim();
+  const seed=seedInput?parseInt(seedInput):Math.floor(Math.random()*999999);
+  const rng=seededRng(seed);
+  const pool=Object.entries(FACTIONS)
+    .filter(([,d])=>d.expansion==='base'||(withPok&&d.expansion==='pok')||(withCodex&&d.expansion==='codex'))
+    .map(([n])=>n).filter(n=>!banned.has(n));
+  const res=document.getElementById('draft-results');
+  if(players*choices>pool.length){
+    res.innerHTML=`<div class="error-msg">Not enough factions. Need ${players*choices}, have ${pool.length} after bans.</div>`;return;
+  }
+  const shuffled=shuffle(pool,rng);
+  const speakerIdx=withSpeaker?Math.floor(rng()*players):-1;
+  let html=`<div class="divider"></div><div class="section-title">Draft Results</div>
+    <div class="seed-display">Seed: <span>${seed}</span></div><br>`;
+  for(let i=0;i<players;i++){
+    const name=names[i]||'Player '+(i+1);
+    const picks=shuffled.slice(i*choices,(i+1)*choices);
+    const isSpeaker=speakerIdx===i;
+    const url='https://ti4.basicallyfine.com/factions/'+picks.map(f=>FACTIONS[f].slug).join(',')+';ti-c3';
+    html+=`<div class="player-card${isSpeaker?' speaker':''}">
+      <div class="player-header">
+        <span class="player-name">${name}</span>
+        ${isSpeaker?'<span class="speaker-badge">&#9733; Speaker</span>':''}
+      </div>
+      <div class="faction-picks">
+        ${picks.map(f=>`<div class="pick-item">
+          <img src="${ICON_COLOR+FACTIONS[f].color}" alt="${f}" onerror="this.style.display='none'">
+          <span>${f}</span></div>`).join('')}
+      </div>
+      <a class="ti4-link" href="${url}" target="_blank">&#10132; View picks on basicallyfine.com</a>
+    </div>`;
+  }
+  res.innerHTML=html;
+}
+
+/* Plaque generator selects — color icons for preview comfort */
+function populateSelects(){
+  const wf=document.getElementById('gen-winner-faction');
+  const rf=document.getElementById('gen-runners');
+  Object.keys(FACTIONS).forEach(name=>{
+    [wf,rf].forEach(sel=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o)});
+  });
+}
+populateSelects();
+
+/* Plaque SVG — uses Black icons to match generate.py output for laser engraving */
+let _lastSVG='';
+function buildPlaqueSVG(winner,date,winnerName,runnerNames){
+  /* Canvas 47mm x 23mm, viewBox at 3px/mm = 141 x 69
+     Positions ported from generate.py (mm * 3):
+       winner icon: insert 4mm,2mm = 12,6  size 11mm = 33
+       winner name: x=30mm=90, y=7mm=21
+       date:        x=30mm=90, y=11mm=33
+       Vs:          x=10mm=30, y=17mm=51
+       runner icons: x=17+i*10 mm = 51+i*30, y=14mm=42, size 5mm=15  */
+  const W=141,H=69;
+  const wFile=FACTIONS[winnerName]?FACTIONS[winnerName].black:(winnerName+' black.png');
+  const runners=runnerNames.slice(0,4).map((n,i)=>{
+    const f=FACTIONS[n]?FACTIONS[n].black:(n+' black.png');
+    return `<image href="${ICON_BLACK+f}" x="${51+i*30}" y="42" width="15" height="15"/>`;
+  }).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="font-family:'Handel Gothic D',Cinzel,Georgia,serif;background:#fff">
+  <rect x=".5" y=".5" width="${W-1}" height="${H-1}" fill="none" stroke="#000" stroke-width=".8"/>
+  <image href="${ICON_BLACK+wFile}" x="12" y="6" width="33" height="33"/>
+  <text x="90" y="21" font-size="15" font-weight="bold" text-anchor="middle" fill="#000">${winner}</text>
+  <text x="90" y="33" font-size="9" text-anchor="middle" fill="#000">${date}</text>
+  <text x="30" y="51" font-size="9" text-anchor="middle" fill="#000">Vs</text>
+  ${runners}
+</svg>`;
+}
+
+function previewPlaque(){
+  const winner=document.getElementById('gen-winner').value.trim().toUpperCase()||'WINNER';
+  const date=document.getElementById('gen-date').value.trim()||'DD-MM-YYYY';
+  const wf=document.getElementById('gen-winner-faction').value;
+  const rf=Array.from(document.getElementById('gen-runners').selectedOptions).map(o=>o.value);
+  const msg=document.getElementById('gen-msg');
+  if(!rf.length){msg.innerHTML='<div class="error-msg">Select at least one runner-up.</div>';return}
+  msg.innerHTML='';
+  _lastSVG=buildPlaqueSVG(winner,date,wf,rf);
+  document.getElementById('plaque-preview').innerHTML=_lastSVG;
+}
+function downloadPlaque(){
+  if(!_lastSVG)previewPlaque();
+  const winner=document.getElementById('gen-winner').value.trim()||'Plaque';
+  const blob=new Blob([_lastSVG],{type:'image/svg+xml'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=winner+'.svg';a.click();
+  document.getElementById('gen-msg').innerHTML='<div class="success-msg">Downloaded.</div>';
+}
+</script>
+</body>
+</html>

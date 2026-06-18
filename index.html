@@ -457,26 +457,77 @@ buildTrophySlots();
 const banned=new Set();
 function buildBanGrid(){
   const grid=document.getElementById('ban-grid');grid.innerHTML='';
-  Object.entries(FACTIONS).forEach(([name,data])=>{
+  const withPok=document.getElementById('inc-pok').checked;
+  const withCodex=document.getElementById('inc-codex').checked;
+  const visible=Object.entries(FACTIONS)
+    .filter(([,d])=>d.expansion==='base'||(withPok&&d.expansion==='pok')||(withCodex&&d.expansion==='codex'))
+    .sort(([a],[b])=>a.localeCompare(b));
+  visible.forEach(([name,data])=>{
     const el=document.createElement('button');el.className='faction-chip';
+    if(banned.has(name))el.classList.add('banned');
     el.innerHTML=`<img src="${ICON_COLOR+data.color}" alt="${name}" onerror="this.style.display='none'"><span>${name.split(' ')[0]}</span>`;
     el.onclick=()=>{if(banned.has(name)){banned.delete(name);el.classList.remove('banned')}
       else{banned.add(name);el.classList.add('banned')}};
     grid.appendChild(el);
   });
 }
+
+document.getElementById('inc-pok').addEventListener('change',buildBanGrid);
+document.getElementById('inc-codex').addEventListener('change',buildBanGrid);
 function clearBans(){banned.clear();document.querySelectorAll('.faction-chip').forEach(c=>c.classList.remove('banned'))}
 buildBanGrid();
 
 /* Draft RNG */
-function seededRng(seed){
-  let s=seed%2147483647;if(s<=0)s+=2147483646;
-  return()=>{s=s*16807%2147483647;return(s-1)/2147483646};
-}
-function shuffle(arr,rng){
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
-  return a;
+function pyRandom(seed) {
+  const mt = new Uint32Array(624);
+  let idx = 624;
+  function initGenrand(s) {
+    mt[0] = s >>> 0;
+    for (let i = 1; i < 624; i++)
+      mt[i] = (Math.imul(1812433253, mt[i-1] ^ (mt[i-1] >>> 30)) + i) >>> 0;
+  }
+  function initByArray(key) {
+    initGenrand(19650218);
+    let i = 1, j = 0;
+    for (let k = Math.max(624, key.length); k > 0; k--) {
+      mt[i] = ((mt[i] ^ (Math.imul(mt[i-1] ^ (mt[i-1] >>> 30), 1664525) >>> 0)) + key[j] + j) >>> 0;
+      i++; j++;
+      if (i >= 624) { mt[0] = mt[623]; i = 1; }
+      if (j >= key.length) j = 0;
+    }
+    for (let k = 623; k > 0; k--) {
+      mt[i] = ((mt[i] ^ (Math.imul(mt[i-1] ^ (mt[i-1] >>> 30), 1566083941) >>> 0)) - i) >>> 0;
+      i++;
+      if (i >= 624) { mt[0] = mt[623]; i = 1; }
+    }
+    mt[0] = 0x80000000;
+  }
+  function seedToKey(n) {
+    let hex = n.toString(16);
+    if (hex.length % 8 !== 0) hex = hex.padStart(hex.length + (8 - hex.length % 8), '0');
+    const key = [];
+    for (let i = 0; i < hex.length; i += 8) key.push(parseInt(hex.slice(i, i+8), 16));
+    return key;
+  }
+  initByArray(seedToKey(seed));
+  function genrand() {
+    if (idx >= 624) {
+      for (let i = 0; i < 624; i++) {
+        const y = (mt[i] & 0x80000000) | (mt[(i+1) % 624] & 0x7FFFFFFF);
+        mt[i] = mt[(i+397) % 624] ^ (y >>> 1);
+        if (y & 1) mt[i] ^= 2567483615;
+      }
+      idx = 0;
+    }
+    let y = mt[idx++];
+    y ^= y >>> 11; y ^= (y << 7) & 2636928640;
+    y ^= (y << 15) & 4022730752; y ^= y >>> 18;
+    return y >>> 0;
+  }
+  return {
+    random() { const a=genrand()>>>5, b=genrand()>>>6; return (a*67108864+b)*(1/9007199254740992); },
+    shuffle(arr) { for (let i=arr.length-1;i>0;i--) { const j=Math.floor(this.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } }
+  };
 }
 function runDraft(){
   const players=parseInt(document.getElementById('player-count').value);
@@ -489,7 +540,7 @@ function runDraft(){
   const withSpeaker=document.getElementById('inc-speaker').checked;
   const seedInput=document.getElementById('seed-val').value.trim();
   const seed=seedInput?parseInt(seedInput):Math.floor(Math.random()*999999);
-  const rng=seededRng(seed);
+  const rng=pyRandom(seed);
   const pool=Object.entries(FACTIONS)
     .filter(([,d])=>d.expansion==='base'||(withPok&&d.expansion==='pok')||(withCodex&&d.expansion==='codex'))
     .map(([n])=>n).filter(n=>!banned.has(n));
@@ -497,7 +548,8 @@ function runDraft(){
   if(players*choices>pool.length){
     res.innerHTML=`<div class="error-msg">Not enough factions. Need ${players*choices}, have ${pool.length} after bans.</div>`;return;
   }
-  const shuffled=shuffle(pool,rng);
+  rng.shuffle(pool);
+  const shuffled=pool;
   const speakerIdx=withSpeaker?Math.floor(rng()*players):-1;
   let html=`<div class="divider"></div><div class="section-title">Draft Results</div>
     <div class="seed-display">Seed: <span>${seed}</span></div><br>`;

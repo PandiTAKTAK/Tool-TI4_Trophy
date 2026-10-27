@@ -305,16 +305,10 @@ const ICON_BLACK = '_media/TI4_Icons/Black/Race Icons/';
 const ICON_COLOR = '_media/TI4_Icons/Color/Race Icons/';
 const OUTPUTS_DIR = 'outputs/';
 
-/* Add new entries here after each game */
-const ROUND_FILES = ['Rnd1','Rnd2','Rnd3','Rnd4','Rnd5'];
-
-const ROUND_META = {
-  Rnd1:{winner:'MARSDEN',winner_icon:'Jol Nar', date:'13-08-2023',runners:['Arborec','Letnev','Yssaril']},
-  Rnd2:{winner:'FUSSEL', winner_icon:'Arborec', date:'15-10-2023',runners:['Creuss','Xxcha','Nekro']},
-  Rnd3:{winner:'MARSDEN',winner_icon:'Yin',     date:'03-05-2025',runners:['Xxcha','Creuss','Arborec']},
-  Rnd4:{winner:'DERZ',   winner_icon:'Sol',     date:'17-08-2025',runners:['Empyrean','Vuil','Muaat']},
-  Rnd5:{winner:'FUSSEL', winner_icon:'Hacan',   date:'21-02-2026',runners:['Nekro','Jol Nar','Titans']},
-};
+/* Rounds are loaded from rounds.json — add new games there, not here */
+const ROUNDS_FILE = 'rounds.json';
+let ROUND_FILES = [];
+let ROUND_META = {};
 
 /* icon key -> exact filename (without path) for Black and Color sets.
    Black icons have ' black' suffix; Keleres is the exception with no suffix.
@@ -491,7 +485,21 @@ function selectPlaque(rnd){
     });
 }
 
-buildTrophySlots();
+function loadRounds(){
+  fetch(ROUNDS_FILE,{cache:'no-cache'})
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(rounds=>{
+      ROUND_FILES=rounds.map(r=>r.id);
+      ROUND_META=Object.fromEntries(rounds.map(r=>[r.id,r]));
+      buildTrophySlots();
+    })
+    .catch(e=>{
+      console.warn('Could not load '+ROUNDS_FILE,e);
+      document.getElementById('plaque-slots').innerHTML=
+        `<div style="font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;padding:.5rem 0">Could not load ${ROUNDS_FILE}</div>`;
+    });
+}
+loadRounds();
 
 /* Draft bans — use Color icons in the UI, they look better on dark bg */
 const banned=new Set();

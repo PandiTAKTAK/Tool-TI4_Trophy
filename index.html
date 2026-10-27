@@ -4,188 +4,277 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TI4 Trophy Hall</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Share+Tech+Mono&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+@font-face{font-family:'Handel Gothic D';src:url('_media/Handel Gothic D Bold.otf') format('opentype');font-weight:100 900;font-display:swap}
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --gold:#c9a84c;--gold-light:#e8c96a;--gold-dark:#8a6a1e;
-  --space:#07090f;--space-2:#0d1120;--space-3:#141828;
-  --text:#e8e4d9;--text-muted:#9a95a8;--red-light:#c0392b;
-  --border:rgba(201,168,76,0.25);
+  --void:#03050a;--hull:#080d15;--panel:#0e1520;--panel-2:#131c29;--panel-3:#1a2535;
+  --line:rgba(132,170,210,.16);--line-strong:rgba(132,170,210,.32);--border:var(--line);
+  --gold:#e3ad3f;--gold-light:#f7d683;--gold-dark:#9a6c22;
+  --holo:#6fcdf0;
+  --text:#e4e9f1;--text-muted:#8693a7;--red-light:#e3553d;
+  --brass-hi:#f6dc9a;--brass:#d2a454;--brass-mid:#b98a3e;--brass-lo:#8f6428;--ink:#24180a;
+  --brass-face:linear-gradient(170deg,var(--brass-hi) 0%,var(--brass) 42%,var(--brass-mid) 72%,var(--brass-lo) 100%);
+  --display:'Handel Gothic D','Barlow Semi Condensed',sans-serif;
+  --body:'Barlow Semi Condensed',system-ui,sans-serif;
+  --cut:12px;
 }
-html,body{height:100%;background:var(--space);color:var(--text);font-family:'Cinzel',Georgia,serif;overflow-x:hidden}
-@font-face{font-family:'Handel Gothic D';src:url('_media/Handel Gothic D Bold.otf') format('opentype');font-weight:bold}
-body::before{content:'';position:fixed;inset:0;
-  background:radial-gradient(ellipse at 20% 50%,rgba(26,14,46,0.6) 0%,transparent 60%),
-             radial-gradient(ellipse at 80% 20%,rgba(8,20,50,0.5) 0%,transparent 50%);
-  pointer-events:none;z-index:0}
+html,body{min-height:100%;background:var(--void);color:var(--text);font-family:var(--body);font-size:16px;overflow-x:hidden}
+/* Nebula wash + faint hex map grid */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(60% 50% at 12% 0%,rgba(46,80,140,.30),transparent 70%),
+    radial-gradient(45% 40% at 92% 12%,rgba(118,58,140,.20),transparent 70%),
+    radial-gradient(55% 45% at 70% 100%,rgba(200,110,40,.10),transparent 70%)}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='48.5' viewBox='0 0 84 48.5'%3E%3Cpath d='M0 24.25L14 0H42L56 24.25L42 48.5H14ZM56 24.25H84' fill='none' stroke='%236fcdf0' stroke-opacity='.07' stroke-width='1'/%3E%3C/svg%3E");
+  background-size:84px 48.5px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 25%,#000 0%,transparent 80%);
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 25%,#000 0%,transparent 80%)}
 #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 .app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
-header{text-align:center;padding:2.5rem 1rem 1.5rem;border-bottom:1px solid var(--border);
-  background:linear-gradient(180deg,rgba(201,168,76,0.06) 0%,transparent 100%)}
-header h1{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,4vw,2.6rem);
-  color:var(--gold);letter-spacing:.12em;text-shadow:0 0 40px rgba(201,168,76,0.3);line-height:1.2}
-header p{font-size:.75rem;color:var(--text-muted);letter-spacing:.22em;text-transform:uppercase;
-  margin-top:.5rem;font-family:'Share Tech Mono',monospace}
-nav{display:flex;border-bottom:1px solid var(--border);background:var(--space-2)}
-.tab-btn{flex:1;padding:1rem;background:none;border:none;color:var(--text-muted);
-  font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.15em;cursor:pointer;
-  transition:all .2s;border-bottom:2px solid transparent;text-transform:uppercase}
-.tab-btn:hover{color:var(--gold);background:rgba(201,168,76,0.04)}
-.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,0.06)}
-.panel{display:none;flex:1;padding:2rem 1rem;max-width:1000px;margin:0 auto;width:100%}
-.panel.active{display:block}
-.field-group{display:flex;flex-direction:column;gap:.4rem}
-label{font-size:.68rem;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
-input[type=text],input[type=number],select{background:var(--space-3);border:1px solid var(--border);
-  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.9rem;padding:.6rem .9rem;
-  border-radius:4px;outline:none;transition:border-color .2s;width:100%}
-input:focus,select:focus{border-color:var(--gold)}
-select option{background:var(--space-3)}
-.checkbox-row{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.3rem}
-.check-item{display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.8rem;color:var(--text-muted)}
-.check-item input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;cursor:pointer}
+
+/* HEADER */
+header{text-align:center;padding:2.6rem 1rem 1.9rem}
+.brand-kicker{font-family:var(--display);font-size:.72rem;letter-spacing:.5em;color:var(--holo);
+  text-transform:uppercase;opacity:.85;margin-bottom:.7rem;padding-left:.5em}
+header h1{font-family:var(--display);font-weight:normal;font-size:clamp(1.7rem,5.4vw,3.3rem);
+  letter-spacing:.14em;padding-left:.14em;text-transform:uppercase;line-height:1.05;
+  background:linear-gradient(180deg,var(--gold-light) 0%,var(--gold) 55%,var(--gold-dark) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 18px rgba(227,173,63,.22))}
+header p{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:.85rem;
+  font-size:.82rem;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--text-muted)}
+header p::before,header p::after{content:'';height:1px;width:min(16vw,140px);
+  background:linear-gradient(90deg,transparent,var(--gold-dark))}
+header p::after{transform:scaleX(-1)}
+
+/* NAV */
+nav{display:flex;justify-content:center;gap:.4rem;padding:0 1rem;position:sticky;top:0;z-index:5;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:rgba(8,13,21,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.tab-btn{flex:0 1 220px;padding:1rem .6rem .9rem;background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--text-muted);font-family:var(--display);font-size:.82rem;letter-spacing:.18em;
+  text-transform:uppercase;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--gold-light);border-bottom-color:var(--gold);
+  background:linear-gradient(0deg,rgba(227,173,63,.13),transparent 75%)}
+.tab-btn:focus-visible{outline:1px solid var(--holo);outline-offset:-5px}
+
+.panel{display:none;flex:1;padding:2.2rem 1rem 3.5rem;max-width:1040px;margin:0 auto;width:100%}
+.panel.active{display:block;animation:panel-in .25s ease-out}
+@keyframes panel-in{from{opacity:0;transform:translateY(4px)}}
+@media(prefers-reduced-motion:reduce){.panel.active{animation:none}}
+
+/* FORMS */
+.field-group{display:flex;flex-direction:column;gap:.45rem}
+label{font-family:var(--display);font-size:.7rem;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase}
+input[type=text],input[type=number],select{background:var(--hull);border:1px solid var(--line-strong);
+  border-left:2px solid var(--gold-dark);color:var(--text);font-family:var(--body);font-size:1rem;font-weight:500;
+  padding:.6rem .85rem;border-radius:0;outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+input:focus,select:focus{border-color:var(--holo);box-shadow:0 0 0 3px rgba(111,205,240,.12)}
+input::placeholder{color:#55607a}
+select option{background:var(--panel-2);color:var(--text)}
+.checkbox-row{display:flex;gap:.5rem 1.6rem;flex-wrap:wrap;margin-top:.2rem}
+.check-item{display:flex;align-items:center;gap:.55rem;cursor:pointer;font-family:var(--body);font-size:.98rem;
+  font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--text-muted)}
+.check-item input[type=checkbox]{accent-color:var(--gold);width:17px;height:17px;cursor:pointer}
 .check-item:hover{color:var(--text)}
-.section-title{font-size:.68rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;
-  border-bottom:1px solid var(--border);padding-bottom:.5rem;margin-bottom:1rem}
-.btn{display:inline-block;padding:.72rem 2rem;background:transparent;border:1px solid var(--gold);
-  color:var(--gold);font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.18em;
-  text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:3px}
-.btn:hover{background:rgba(201,168,76,0.1);box-shadow:0 0 20px rgba(201,168,76,0.12)}
-.btn:active{transform:scale(.98)}
-.btn-danger{border-color:var(--red-light);color:var(--red-light)}
-.btn-danger:hover{background:rgba(192,57,43,0.15)}
-.btn-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
-.divider{height:1px;background:var(--border);margin:1.5rem 0}
-.error-msg{color:#c0392b;font-size:.75rem;letter-spacing:.08em;font-family:'Share Tech Mono',monospace;margin-top:.5rem}
-.success-msg{color:#27ae60;font-size:.75rem;letter-spacing:.08em;font-family:'Share Tech Mono',monospace;margin-top:.5rem}
+.section-title{display:flex;align-items:center;gap:.8rem;font-family:var(--display);font-size:.95rem;
+  letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:1.3rem}
+.section-title::before{content:'';width:12px;height:12px;flex-shrink:0;background:var(--gold);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line-strong),transparent)}
+.lede{font-size:1rem;color:var(--text-muted);line-height:1.55;margin:-.4rem 0 1.5rem;max-width:64ch}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line-strong),transparent);margin:2rem 0 1.6rem}
+.error-msg{color:var(--red-light);font-size:.95rem;font-weight:500;margin-top:.75rem}
+.success-msg{color:#5cc98a;font-size:.95rem;font-weight:500;margin-top:.75rem}
+.note-msg{color:var(--text-muted);font-size:.92rem;margin-top:.55rem;line-height:1.45}
+.note-msg strong{color:var(--red-light);font-weight:600}
 
-/* TROPHY */
-.trophy-scene{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 1.5rem}
-.hex-trophy{
-  position:relative;width:400px;max-width:100%;
-  animation:base-rock 6s ease-in-out infinite;
-  filter:drop-shadow(0 12px 24px rgba(0,0,0,0.6))
-}
-@keyframes base-rock{
-  0%,100%{transform:perspective(700px) rotateX(5deg) rotateY(-3deg)}
-  50%{transform:perspective(700px) rotateX(7deg) rotateY(3deg)}}
-.hex-trophy:hover{animation-play-state:paused}
-.base-face{
-  background:linear-gradient(160deg,#221a08 0%,#0f0b04 60%,#080600 100%);
-  border:1px solid rgba(201,168,76,0.45);
-  border-radius:4px 4px 6px 6px;
-  padding:20px 22px 26px;
-  box-shadow:
-    0 10px 0 #040300,
-    0 11px 0 rgba(201,168,76,0.12),
-    inset 0 1px 0 rgba(201,168,76,0.12),
-    inset 0 0 40px rgba(0,0,0,0.4)
-}
-.base-engraving-title{
-  text-align:center;font-size:.58rem;letter-spacing:.38em;color:var(--gold-dark);
-  text-transform:uppercase;margin-bottom:14px;font-family:'Share Tech Mono',monospace;
-  border-bottom:1px solid rgba(201,168,76,0.18);padding-bottom:10px
-}
-.plaque-slots{display:flex;flex-direction:column;gap:7px}
-.plaque-slot{
-  display:flex;align-items:center;gap:10px;padding:8px 10px;
-  border:1px solid rgba(201,168,76,0.2);border-radius:3px;cursor:pointer;
-  transition:all .18s;background:rgba(0,0,0,0.3);min-height:40px;overflow:hidden;
-  position:relative;
-}
-.plaque-slot::after{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--gold-dark);opacity:0;transition:opacity .18s
-}
-.plaque-slot:hover{border-color:rgba(201,168,76,0.55);background:rgba(201,168,76,0.05)}
-.plaque-slot:hover::after{opacity:1}
-.plaque-slot.active{
-  border-color:var(--gold);background:rgba(201,168,76,0.09);
-  box-shadow:inset 0 0 16px rgba(201,168,76,0.07)
-}
-.plaque-slot.active::after{opacity:1;background:var(--gold)}
-.slot-rnd{font-size:.62rem;letter-spacing:.14em;color:var(--gold-dark);
-  font-family:'Share Tech Mono',monospace;white-space:nowrap;min-width:36px}
-.slot-icon{width:24px;height:24px;object-fit:contain;flex-shrink:0}
-.slot-winner{font-size:.8rem;letter-spacing:.12em;color:var(--gold-light);flex:1}
-.slot-date{font-size:.58rem;color:var(--text-muted);font-family:'Share Tech Mono',monospace;white-space:nowrap}
-.base-plinth{
-  width:340px;max-width:90%;margin:0 auto;height:16px;
-  background:linear-gradient(180deg,#050400 0%,#0a0800 100%);
-  border:1px solid rgba(201,168,76,0.2);border-top:none;
-  border-radius:0 0 10px 10px;
-  box-shadow:0 5px 0 #030200,0 6px 0 rgba(201,168,76,0.07)
-}
-.trophy-legend{text-align:center;font-size:.62rem;letter-spacing:.14em;
-  color:var(--text-muted);margin-top:1rem;font-family:'Share Tech Mono',monospace}
+/* CUT-CORNER FRAMES — TI4 card silhouette. --frame-line is the edge, --frame-bg the face */
+.btn,.gen-panel,.player-card,.plaque-detail,.faction-chip,.pick-item,.runner-chip,.plaque-slot,.stats-card,.stat-tile,
+.speaker-badge,.ban-toggle,.ban-bar,#plaque-preview,.plaque-svg-wrap{
+  --cp:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut));
+  --frame-line:var(--line-strong);--frame-bg:var(--panel);--frame-w:1px; /* reset so nested frames don't inherit */
+  position:relative;isolation:isolate;clip-path:var(--cp);background:var(--frame-line)}
+.btn::before,.gen-panel::before,.player-card::before,.plaque-detail::before,.faction-chip::before,.pick-item::before,
+.runner-chip::before,.plaque-slot::before,.stats-card::before,.stat-tile::before,.speaker-badge::before,.ban-toggle::before,.ban-bar::before,
+#plaque-preview::before,.plaque-svg-wrap::before{
+  content:'';position:absolute;inset:var(--frame-w);z-index:-1;clip-path:var(--cp);background:var(--frame-bg)}
 
-/* PLAQUE DETAIL */
-.plaque-detail{width:100%;max-width:580px;margin:1.5rem auto 0;
-  border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--space-2)}
-.plaque-detail-empty{padding:2rem;text-align:center;color:var(--text-muted);
-  font-size:.75rem;letter-spacing:.12em}
-.plaque-svg-wrap{padding:1.5rem;border-bottom:1px solid var(--border);
-  background:#fff;display:flex;justify-content:center;align-items:center;min-height:90px}
-.plaque-svg-wrap svg,.plaque-svg-wrap img{max-width:100%;height:auto;display:block}
-.plaque-meta{padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;
-  border-bottom:1px solid var(--border)}
-.plaque-meta-icon{width:44px;height:44px;object-fit:contain}
-.plaque-meta-winner{font-size:1.15rem;color:var(--gold);letter-spacing:.1em}
-.plaque-meta-date{font-size:.68rem;color:var(--text-muted);letter-spacing:.14em;
-  font-family:'Share Tech Mono',monospace;margin-top:.2rem}
-.plaque-runners{padding:1rem 1.5rem}
-.runners-label{font-size:.62rem;letter-spacing:.2em;color:var(--text-muted);
-  text-transform:uppercase;margin-bottom:.6rem}
-.runner-chips{display:flex;flex-wrap:wrap;gap:.4rem}
-.runner-chip{display:flex;align-items:center;gap:.5rem;padding:.32rem .7rem;
-  border:1px solid var(--border);border-radius:3px;font-size:.68rem;color:var(--text-muted)}
-.runner-chip img{width:20px;height:20px;object-fit:contain}
+/* BUTTONS */
+.btn{--cut:8px;--frame-line:var(--gold-dark);--frame-bg:var(--panel-2);display:inline-block;padding:.8rem 1.6rem;
+  border:none;color:var(--gold-light);font-family:var(--display);font-size:.78rem;letter-spacing:.18em;
+  text-transform:uppercase;cursor:pointer;transition:color .15s,transform .1s}
+.btn:hover{--frame-line:var(--gold);--frame-bg:#1e2938;color:#fff}
+.btn:focus-visible{outline:none;--frame-line:var(--holo)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-primary{--frame-line:var(--gold-light);--frame-bg:linear-gradient(180deg,var(--gold-light),var(--gold) 55%,#c38c2a);color:var(--ink)}
+.btn-primary:hover{--frame-line:#fff3c9;--frame-bg:linear-gradient(180deg,#ffe6a3,var(--gold-light) 50%,var(--gold));color:var(--ink)}
+.btn-danger{--frame-line:rgba(227,85,61,.6);color:#f08a75}
+.btn-danger:hover{--frame-line:var(--red-light);--frame-bg:#2a1414;color:#ffb3a3}
+.btn-small{padding:.55rem 1rem;font-size:.7rem}
+.hall-head{display:flex;align-items:center;gap:1rem;margin-bottom:1.3rem}
+.hall-head .section-title{flex:1;margin-bottom:0}
+.back-btn{margin-bottom:1.4rem}
+.btn-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem}
+
+/* TROPHY HALL */
+.hall{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.75rem;align-items:start}
+@media(max-width:820px){.hall{grid-template-columns:1fr}}
+.plaque-slots{display:flex;flex-direction:column;gap:.6rem}
+.loading-note{font-size:.95rem;color:var(--text-muted);padding:.5rem 0}
+.plaque-slot{--cut:10px;--frame-line:var(--brass-lo);--frame-bg:var(--brass-face);
+  display:grid;grid-template-columns:auto 42px minmax(0,1fr) auto auto;align-items:center;gap:.75rem;
+  padding:.6rem .65rem .6rem .8rem;cursor:pointer;color:var(--ink);outline:none;transition:filter .15s,transform .15s}
+.plaque-slot:hover{filter:brightness(1.07);transform:translateX(3px)}
+.plaque-slot.active{--frame-line:var(--holo);--frame-w:2px}
+.plaque-slot:focus-visible{--frame-line:var(--holo);--frame-w:2px}
+.plaque-slot.selected{--frame-line:var(--red-light);--frame-w:2px}
+.slot-rnd{display:flex;flex-direction:column;align-items:center;font-family:var(--display);font-size:1.3rem;line-height:1;
+  color:rgba(36,24,10,.78);padding-right:.7rem;border-right:1px solid rgba(36,24,10,.22);min-width:38px}
+.slot-rnd small{font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px}
+.slot-icon{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 1px 0 rgba(255,244,210,.55))}
+.slot-text{min-width:0}
+.slot-winner{display:block;font-family:var(--display);font-size:1.08rem;letter-spacing:.1em;color:var(--ink);
+  text-shadow:0 1px 0 rgba(255,244,210,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot-faction{display:block;font-size:.88rem;font-weight:600;color:rgba(36,24,10,.72);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot-side{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem}
+.slot-runners{display:flex;gap:4px}
+.slot-runners img{width:18px;height:18px;object-fit:contain;opacity:.8}
+.slot-date{font-family:var(--display);font-size:.68rem;letter-spacing:.06em;color:rgba(36,24,10,.7)}
+.ban-toggle{--cut:6px;--frame-line:rgba(36,24,10,.4);--frame-bg:rgba(255,244,210,.3);width:34px;height:34px;
+  display:grid;place-items:center;border:none;cursor:pointer;color:rgba(36,24,10,.55);transition:color .15s}
+.ban-toggle:hover{--frame-line:var(--red-light);color:#9c2614}
+.ban-toggle:focus-visible{outline:none;--frame-line:var(--holo)}
+.ban-toggle[aria-pressed=true]{--frame-line:#8e2414;--frame-bg:var(--red-light);color:#fff}
+@media(max-width:460px){.slot-runners{display:none}.plaque-slot{grid-template-columns:auto 36px minmax(0,1fr) auto auto;gap:.55rem}.slot-icon{width:36px;height:36px}}
+
+.ban-bar{--cut:10px;--frame-bg:var(--panel);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+  padding:.65rem .7rem .65rem 1rem;margin-top:1rem}
+.ban-bar.has-selection{--frame-line:rgba(227,85,61,.65)}
+.ban-bar-text{flex:1;min-width:170px;font-size:.95rem;color:var(--text-muted)}
+.ban-bar-text strong{color:#f08a75;font-weight:600}
+.ban-bar .btn{padding:.6rem 1rem}
+
+.plaque-detail{--cut:16px;--frame-bg:linear-gradient(180deg,var(--panel-2),var(--panel));position:sticky;top:4.6rem}
+@media(max-width:820px){.plaque-detail{position:relative;top:0}}
+.plaque-detail-empty{padding:3.5rem 1.5rem;text-align:center;color:var(--text-muted);font-size:.98rem}
+.plaque-svg-wrap{--cut:10px;--frame-line:var(--brass-lo);--frame-bg:var(--brass-face);
+  margin:1.1rem 1.1rem 0;padding:5% 6%;min-height:140px;display:flex;align-items:center;justify-content:center}
+.plaque-svg-wrap svg{width:100%;height:auto;display:block}
+.plaque-loading{font-family:var(--display);font-size:.75rem;letter-spacing:.14em;color:rgba(36,24,10,.65);text-transform:uppercase}
+.plaque-meta{padding:1.3rem 1.4rem .3rem;display:flex;align-items:center;gap:1rem}
+.plaque-meta-icon{width:58px;height:58px;object-fit:contain;flex-shrink:0}
+.plaque-meta-winner{font-family:var(--display);font-size:1.55rem;letter-spacing:.1em;color:var(--gold-light);line-height:1.1}
+.plaque-meta-faction{font-size:1.1rem;font-weight:600;color:var(--text);margin-top:.15rem}
+.plaque-meta-date{font-size:.82rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);margin-top:.2rem}
+.plaque-runners{padding:1.1rem 1.4rem .4rem}
+.runners-label{font-family:var(--display);font-size:.7rem;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase;margin-bottom:.6rem}
+.runner-chips{display:flex;flex-wrap:wrap;gap:.45rem}
+.runner-chip{--cut:6px;--frame-bg:var(--hull);display:flex;align-items:center;gap:.5rem;padding:.38rem .75rem .38rem .5rem;
+  font-size:.92rem;font-weight:500;color:var(--text)}
+.runner-chip img{width:22px;height:22px;object-fit:contain}
+.plaque-actions{padding:1rem 1.4rem 1.4rem}
+.plaque-actions .btn{padding:.65rem 1.1rem}
+
+/* TROPHY STATS */
+:root{--series-won:#bd8420;--series-played:#4a86cc}
+.stats{margin-top:3rem}
+.stat-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.7rem;margin-bottom:1rem}
+.stat-tile{--cut:10px;--frame-bg:linear-gradient(180deg,var(--panel-2),var(--panel));padding:.9rem 1rem 1rem}
+.stat-label{font-family:var(--display);font-size:.66rem;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase}
+.stat-value{font-family:var(--display);font-size:1.7rem;color:var(--gold-light);letter-spacing:.04em;margin-top:.35rem;line-height:1.1}
+.stat-value.small{font-size:1.1rem;letter-spacing:.06em}
+.stat-sub{font-size:.9rem;color:var(--text-muted);margin-top:.25rem}
+.stats-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:1rem;align-items:start}
+@media(max-width:820px){.stats-grid{grid-template-columns:1fr}}
+.stats-card{--cut:14px;--frame-bg:linear-gradient(180deg,var(--panel-2),var(--panel));padding:1.2rem 1.25rem 1.3rem}
+.stats-card+.stats-card{margin-top:1rem}
+.stats-card h3{font-family:var(--display);font-weight:normal;font-size:.82rem;letter-spacing:.16em;color:var(--text);text-transform:uppercase}
+.stats-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem 1rem;flex-wrap:wrap;margin-bottom:1rem}
+.chart-legend{display:flex;gap:1rem;font-size:.88rem;color:var(--text-muted)}
+.chart-legend span{display:flex;align-items:center;gap:.4rem}
+.chart-legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.chart-note{font-size:.85rem;color:var(--text-muted);margin-top:.9rem}
+.freq-chart{display:flex;flex-direction:column;gap:2px}
+.freq-row{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 7.5rem;align-items:center;gap:.8rem;
+  padding:.3rem .4rem;border-radius:2px;outline:none}
+.freq-row:hover,.freq-row:focus-visible{background:rgba(132,170,210,.07)}
+.freq-name{display:flex;align-items:center;gap:.5rem;font-size:.95rem;font-weight:500;color:var(--text);min-width:0}
+.freq-name img{width:22px;height:22px;object-fit:contain;flex-shrink:0}
+.freq-name span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.freq-track{display:flex;gap:2px;height:12px;
+  background:repeating-linear-gradient(90deg,transparent 0 calc(var(--tick) - 1px),rgba(132,170,210,.12) calc(var(--tick) - 1px) var(--tick))}
+.freq-seg{height:100%}
+.freq-seg:last-child{border-radius:0 4px 4px 0}
+.freq-seg.won{background:var(--series-won)}
+.freq-seg.played{background:var(--series-played)}
+.freq-nums{font-size:.9rem;color:var(--text-muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.freq-nums b{color:var(--text);font-weight:600}
+@media(max-width:560px){.freq-row{grid-template-columns:minmax(0,120px) minmax(0,1fr) 6.4rem;gap:.5rem}.freq-name img{display:none}}
+.champ-row{display:grid;grid-template-columns:minmax(0,7rem) minmax(0,1fr) 2rem;align-items:center;gap:.7rem;padding:.3rem 0}
+.champ-name{font-family:var(--display);font-size:.9rem;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.champ-track{height:12px;display:flex}
+.champ-bar{height:100%;background:var(--series-won);border-radius:0 4px 4px 0}
+.champ-count{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.unplayed{display:flex;flex-wrap:wrap;gap:.4rem}
+.unplayed .runner-chip{font-size:.85rem;color:var(--text-muted)}
+.chart-tip{position:fixed;z-index:20;pointer-events:none;background:#060a10;border:1px solid var(--line-strong);
+  padding:.55rem .7rem;font-size:.88rem;color:var(--text);line-height:1.45;min-width:150px;opacity:0;transition:opacity .1s}
+.chart-tip.show{opacity:1}
+.chart-tip strong{display:block;font-family:var(--display);font-weight:normal;font-size:.78rem;letter-spacing:.1em;
+  color:var(--gold-light);margin-bottom:.2rem;text-transform:uppercase}
+.chart-tip i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:.4rem}
 
 /* DRAFT */
-.draft-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+.draft-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.4rem}
 @media(max-width:600px){.draft-grid,.gen-grid{grid-template-columns:1fr}}
-.factions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.4rem;
-  max-height:200px;overflow-y:auto;border:1px solid var(--border);
-  border-radius:4px;padding:.6rem;background:var(--space-3)}
-.faction-chip{display:flex;align-items:center;gap:.45rem;padding:.32rem .55rem;
-  border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:.62rem;
-  letter-spacing:.07em;color:var(--text-muted);transition:all .18s;background:transparent;
-  text-align:left;width:100%}
-.faction-chip img{width:20px;height:20px;object-fit:contain;flex-shrink:0}
-.faction-chip:hover{border-color:var(--gold);color:var(--gold)}
-.faction-chip.banned{background:rgba(192,57,43,0.2);border-color:var(--red-light);color:var(--red-light)}
-.player-card{background:var(--space-2);border:1px solid var(--border);
-  border-radius:5px;padding:1.1rem 1.25rem;margin-bottom:.9rem}
-.player-card.speaker{border-color:var(--gold);box-shadow:0 0 18px rgba(201,168,76,0.08)}
-.player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
-.player-name{font-size:.95rem;letter-spacing:.1em}
-.speaker-badge{font-size:.58rem;letter-spacing:.14em;color:var(--gold);
-  border:1px solid var(--gold-dark);padding:.18rem .55rem;border-radius:2px}
-.faction-picks{display:flex;flex-wrap:wrap;gap:.4rem}
-.pick-item{display:flex;align-items:center;gap:.45rem;padding:.35rem .65rem;
-  background:var(--space-3);border:1px solid var(--border);border-radius:3px;
-  font-size:.68rem;color:var(--text-muted)}
-.pick-item img{width:22px;height:22px;object-fit:contain}
-.seed-display{font-family:'Share Tech Mono',monospace;font-size:.72rem;
-  color:var(--text-muted);text-align:center;margin-top:.4rem}
-.seed-display span{color:var(--gold-light)}
-.ti4-link{font-size:.62rem;color:var(--gold-dark);text-decoration:none;
-  letter-spacing:.09em;display:inline-block;margin-top:.45rem}
-.ti4-link:hover{color:var(--gold)}
+.factions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.4rem;
+  max-height:240px;overflow-y:auto;border:1px solid var(--line);padding:.6rem;background:rgba(8,13,21,.8)}
+.faction-chip{--cut:6px;--frame-line:var(--line);--frame-bg:var(--panel);display:flex;align-items:center;gap:.5rem;
+  padding:.4rem .55rem;border:none;cursor:pointer;font-family:var(--body);font-size:.88rem;font-weight:500;
+  color:var(--text-muted);transition:color .15s;text-align:left;width:100%}
+.faction-chip img{width:22px;height:22px;object-fit:contain;flex-shrink:0;transition:filter .15s,opacity .15s}
+.faction-chip:hover{--frame-line:var(--gold-dark);color:var(--text)}
+.faction-chip:focus-visible{outline:none;--frame-line:var(--holo)}
+.faction-chip.banned{--frame-line:rgba(227,85,61,.75);
+  --frame-bg:repeating-linear-gradient(135deg,rgba(227,85,61,.18) 0 6px,rgba(227,85,61,.07) 6px 12px);
+  color:#f08a75;text-decoration:line-through}
+.faction-chip.banned img{filter:grayscale(1);opacity:.5}
+.player-card{--cut:12px;--accent:var(--gold);
+  --frame-bg:linear-gradient(90deg,var(--accent) 0 4px,transparent 4px),linear-gradient(180deg,var(--panel-2),var(--panel));
+  padding:1.1rem 1.25rem 1.1rem 1.55rem;margin-bottom:.9rem}
+.player-card.speaker{--frame-line:var(--gold)}
+.player-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
+.player-name{font-family:var(--display);font-size:1.08rem;letter-spacing:.12em;text-transform:uppercase}
+.speaker-badge{--cut:5px;--frame-line:var(--gold);--frame-bg:rgba(227,173,63,.16);font-family:var(--display);
+  font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-light);padding:.32rem .75rem}
+.faction-picks{display:flex;flex-wrap:wrap;gap:.45rem}
+.pick-item{--cut:6px;--frame-bg:var(--hull);display:flex;align-items:center;gap:.5rem;padding:.4rem .8rem .4rem .5rem;
+  font-size:.95rem;font-weight:500;color:var(--text)}
+.pick-item img{width:24px;height:24px;object-fit:contain}
+.seed-display{font-size:.85rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);margin:-.4rem 0 1rem}
+.seed-display span{font-family:var(--display);color:var(--gold-light);letter-spacing:.08em}
+.ti4-link{font-size:.9rem;font-weight:500;color:var(--holo);text-decoration:none;display:inline-block;margin-top:.7rem}
+.ti4-link:hover{color:#bfeaff;text-decoration:underline}
 
 /* PLAQUE GEN */
-.gen-panel{background:var(--space-2);border:1px solid var(--border);
-  border-radius:6px;padding:1.4rem;margin-bottom:1.5rem}
-.gen-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
-#plaque-preview{margin-top:1.25rem;border:1px solid var(--border);border-radius:4px;
-  background:#fff;display:flex;align-items:center;justify-content:center;
-  padding:1.25rem;min-height:90px}
-#plaque-preview svg{max-width:100%;height:auto}
-.preview-placeholder{font-size:.75rem;color:#aaa;letter-spacing:.1em}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--space-2)}
-::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:2px}
+.gen-panel{--cut:14px;--frame-bg:linear-gradient(180deg,var(--panel-2),var(--panel));padding:1.5rem;margin-bottom:1.5rem}
+.gen-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.4rem}
+#plaque-preview{--cut:14px;--frame-line:var(--brass-lo);--frame-bg:var(--brass-face);display:flex;align-items:center;
+  justify-content:center;padding:1.75rem;min-height:140px}
+#plaque-preview svg{width:100%;max-width:560px;height:auto;background:transparent!important}
+.preview-placeholder{font-family:var(--display);font-size:.78rem;letter-spacing:.16em;color:rgba(36,24,10,.6);text-transform:uppercase}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--hull)}
+::-webkit-scrollbar-thumb{background:var(--gold-dark)}
 </style>
 </head>
 <body>
@@ -193,34 +282,68 @@ select option{background:var(--space-3)}
 <div class="app">
 
 <header>
-  <h1>Twilight Imperium IV</h1>
-  <p>Trophy Hall &amp; Draft Generator</p>
+  <div class="brand-kicker">Fourth Edition</div>
+  <h1>Twilight Imperium</h1>
+  <p>Trophy Hall &amp; Faction Draft</p>
 </header>
 
 <nav>
-  <button class="tab-btn active" onclick="showTab('draft',this)">&#9632; Draft</button>
-  <button class="tab-btn" onclick="showTab('plaque',this)">&#9654; New Plaque</button>
-  <button class="tab-btn" onclick="showTab('trophy',this)">&#9670; Trophy Hall</button>
+  <button class="tab-btn active" data-tab="draft" onclick="showTab('draft',this)">Draft</button>
+  <button class="tab-btn" data-tab="trophy" onclick="showTab('trophy',this)">Trophy Hall</button>
 </nav>
 
 <!-- TROPHY HALL -->
 <div class="panel" id="tab-trophy">
-  <div class="trophy-scene">
-    <div class="hex-trophy">
-      <div class="base-face">
-        <div class="base-engraving-title">Triumphant Commanders</div>
-        <div class="plaque-slots" id="plaque-slots">
-          <div style="font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;padding:.5rem 0">Loading plaques&hellip;</div>
+  <div class="hall-head">
+    <div class="section-title">Hall of Champions</div>
+    <button class="btn btn-small" onclick="openPlaqueGenerator()">New Plaque</button>
+  </div>
+  <p class="lede">Every victor engraved on the trophy. Select a plaque to inspect it, or use its ban marker to strike every faction from that round out of the next draft.</p>
+  <div class="hall">
+    <div>
+      <div class="plaque-slots" id="plaque-slots">
+        <div class="loading-note">Loading plaques&hellip;</div>
+      </div>
+      <div class="ban-bar" id="ban-bar">
+        <span class="ban-bar-text" id="ban-bar-text">No plaques marked for ban</span>
+        <button class="btn btn-danger" id="ban-selected-btn" onclick="banSelectedRounds()" disabled>Ban in draft</button>
+        <button class="btn" id="clear-selection-btn" onclick="clearPlaqueSelection()" disabled>Clear</button>
+      </div>
+    </div>
+    <div class="plaque-detail" id="plaque-detail">
+      <div class="plaque-detail-empty">Select a plaque to inspect it</div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="section-title">Galactic Records</div>
+    <div class="stat-tiles" id="stat-tiles"></div>
+    <div class="stats-grid">
+      <div class="stats-card">
+        <div class="stats-card-head">
+          <h3>Faction picks &amp; wins</h3>
+          <div class="chart-legend">
+            <span><i style="background:var(--series-won)"></i>Won</span>
+            <span><i style="background:var(--series-played)"></i>Played, didn&rsquo;t win</span>
+          </div>
+        </div>
+        <div class="freq-chart" id="faction-chart"></div>
+        <div class="chart-note">Bar length is the number of rounds the faction was played. Hover a row for details.</div>
+      </div>
+      <div>
+        <div class="stats-card">
+          <div class="stats-card-head"><h3>Champions</h3></div>
+          <div id="champion-chart"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-head"><h3>Never fielded</h3></div>
+          <div class="unplayed" id="unplayed-factions"></div>
         </div>
       </div>
-      <div class="base-plinth"></div>
     </div>
-    <div class="trophy-legend">Click a plaque to inspect &nbsp;&bull;&nbsp; Hover to pause rotation</div>
-  </div>
-  <div class="plaque-detail" id="plaque-detail">
-    <div class="plaque-detail-empty">Select a plaque from the trophy above</div>
   </div>
 </div>
+<div class="chart-tip" id="chart-tip" role="tooltip"></div>
 
 <!-- DRAFT -->
 <div class="panel active" id="tab-draft">
@@ -247,17 +370,18 @@ select option{background:var(--space-3)}
     <label>Expansions &amp; Options</label>
     <div class="checkbox-row">
       <label class="check-item"><input type="checkbox" checked disabled> Base Game</label>
-      <label class="check-item"><input type="checkbox" id="inc-pok"> Prophecy of Kings</label>
-      <label class="check-item"><input type="checkbox" id="inc-codex"> Codex (Keleres)</label>
-      <label class="check-item"><input type="checkbox" id="inc-speaker"> Pick Speaker</label>
+      <label class="check-item"><input type="checkbox" id="inc-pok" checked> Prophecy of Kings</label>
+      <label class="check-item"><input type="checkbox" id="inc-codex" checked> Codex (Keleres)</label>
+      <label class="check-item"><input type="checkbox" id="inc-speaker" checked> Pick Speaker</label>
     </div>
   </div>
   <div class="field-group" style="margin-bottom:1.4rem">
     <label>Ban Factions &mdash; click to toggle</label>
     <div class="factions-grid" id="ban-grid"></div>
+    <div id="ban-note"></div>
   </div>
   <div class="btn-row">
-	<button class="btn" onclick="runDraft()">Generate Draft</button>
+	<button class="btn btn-primary" onclick="runDraft()">Generate Draft</button>
 	<button class="btn" onclick="settingsToHash();copyHash()">Share Settings</button>
 	<button class="btn btn-danger" onclick="clearBans()">Clear Bans</button>
   </div>
@@ -266,9 +390,10 @@ select option{background:var(--space-3)}
 
 <!-- NEW PLAQUE -->
 <div class="panel" id="tab-plaque">
+  <button class="btn btn-small back-btn" onclick="closePlaqueGenerator()">&larr; Trophy Hall</button>
   <div class="section-title">Generate Plaque SVG</div>
-  <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:1.4rem;line-height:1.7;letter-spacing:.05em">
-    Fill in the details to preview and download an engraving-ready SVG.
+  <p class="lede">
+    Plaques for rounds in rounds.json are generated automatically on deploy. Use this to preview or download one by hand.
   </p>
   <div class="gen-panel">
     <div class="gen-grid">
@@ -372,7 +497,7 @@ function copyHash(){
       r:Math.random()*1.4+.2,a:Math.random(),s:Math.random()*.0025+.0008})}
   function draw(){ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.a+=s.s;
     if(s.a>1||s.a<0)s.s*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,2*Math.PI);
-    ctx.fillStyle=`rgba(232,228,217,${s.a})`;ctx.fill()});requestAnimationFrame(draw)}
+    ctx.fillStyle=`rgba(214,228,255,${s.a*.8})`;ctx.fill()});requestAnimationFrame(draw)}
   resize();window.addEventListener('resize',resize);draw();
 })();
 
@@ -384,24 +509,118 @@ function showTab(id,btn){
 }
 
 /* Trophy Hall */
+const BAN_ICON='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M6 18L18 6" stroke="currentColor" stroke-width="2.4"/></svg>';
+/* Plaques marked in the Trophy Hall whose winning faction should be banned from the draft */
+const plaqueSelection=new Set();
+
+/* icon name (as used in rounds.json) -> full faction name / colour icon */
+function factionNameByIcon(iconName){
+  const e=Object.entries(FACTIONS).find(([,d])=>d.black.startsWith(iconName));
+  return e?e[0]:iconName;
+}
+function colorPathByIcon(iconName){
+  const f=factionByIcon(iconName);
+  return ICON_COLOR+(f?f.color:iconName+'.png');
+}
+function roundLabel(rnd){
+  const m=/^Rnd(\d+)$/i.exec(rnd);
+  return m?`<small>Rnd</small>${m[1]}`:rnd;
+}
+
 function buildTrophySlots(){
   const container=document.getElementById('plaque-slots');
   container.innerHTML='';
   ROUND_FILES.forEach(rnd=>{
     const meta=ROUND_META[rnd];
+    const faction=factionNameByIcon(meta.winner_icon);
     const el=document.createElement('div');
     el.className='plaque-slot';el.id='slot-'+rnd;
-    if(meta){
-      el.innerHTML=`<span class="slot-rnd">${rnd}</span>
-        <img class="slot-icon" src="${blackPath(meta.winner_icon)}" alt="${meta.winner_icon}" onerror="this.style.visibility='hidden'">
+    el.tabIndex=0;el.setAttribute('role','button');
+    el.setAttribute('aria-label',`${rnd}: ${meta.winner}, ${faction}, ${meta.date}`);
+    el.innerHTML=`<span class="slot-rnd">${roundLabel(rnd)}</span>
+      <img class="slot-icon" src="${blackPath(meta.winner_icon)}" alt="" onerror="this.style.visibility='hidden'">
+      <span class="slot-text">
         <span class="slot-winner">${meta.winner}</span>
-        <span class="slot-date">${meta.date}</span>`;
-    } else {
-      el.innerHTML=`<span class="slot-rnd">${rnd}</span><span class="slot-winner" style="color:var(--text-muted)">Unknown</span>`;
-    }
+        <span class="slot-faction">${faction}</span>
+      </span>
+      <span class="slot-side">
+        <span class="slot-runners">${meta.runners.map(r=>
+          `<img src="${blackPath(r)}" alt="${factionNameByIcon(r)}" title="${factionNameByIcon(r)}" onerror="this.style.display='none'">`).join('')}</span>
+        <span class="slot-date">${meta.date}</span>
+      </span>
+      <button class="ban-toggle" type="button" aria-pressed="false" title="Mark all ${rnd} factions for ban">${BAN_ICON}</button>`;
+    el.querySelector('.ban-toggle').onclick=e=>{e.stopPropagation();togglePlaqueSelection(rnd)};
     el.onclick=()=>selectPlaque(rnd);
+    el.onkeydown=e=>{if(e.target===el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectPlaque(rnd)}};
     container.appendChild(el);
   });
+  [...plaqueSelection].forEach(r=>{if(!ROUND_META[r])plaqueSelection.delete(r)});
+  refreshPlaqueSelection();
+}
+
+/* Every faction played in the marked rounds — winner and runner-ups */
+function selectedRoundFactions(){
+  return [...new Set(ROUND_FILES.filter(r=>plaqueSelection.has(r))
+    .flatMap(r=>[ROUND_META[r].winner_icon,...ROUND_META[r].runners].map(factionNameByIcon)))];
+}
+
+function togglePlaqueSelection(rnd){
+  if(plaqueSelection.has(rnd))plaqueSelection.delete(rnd);else plaqueSelection.add(rnd);
+  refreshPlaqueSelection();
+}
+
+function clearPlaqueSelection(){
+  plaqueSelection.clear();
+  refreshPlaqueSelection();
+}
+
+function refreshPlaqueSelection(){
+  ROUND_FILES.forEach(rnd=>{
+    const slot=document.getElementById('slot-'+rnd);if(!slot)return;
+    const on=plaqueSelection.has(rnd);
+    slot.classList.toggle('selected',on);
+    slot.querySelector('.ban-toggle').setAttribute('aria-pressed',on);
+  });
+  const names=selectedRoundFactions();
+  document.getElementById('ban-bar').classList.toggle('has-selection',names.length>0);
+  document.getElementById('ban-bar-text').innerHTML=names.length
+    ?`Ban <strong>${names.join(', ')}</strong> from the next draft`
+    :'No plaques marked for ban';
+  document.getElementById('ban-selected-btn').disabled=!names.length;
+  document.getElementById('clear-selection-btn').disabled=!names.length;
+  const detailBtn=document.getElementById('detail-ban-btn');
+  if(detailBtn){
+    const rnd=detailBtn.dataset.rnd;
+    detailBtn.textContent=plaqueSelection.has(rnd)
+      ?'Unmark for ban'
+      :`Mark all ${rnd} factions for ban`;
+  }
+}
+
+function banSelectedRounds(){
+  const names=selectedRoundFactions();
+  if(!names.length)return;
+  names.forEach(n=>banned.add(n));
+  buildBanGrid();
+  const expansionNames={pok:'Prophecy of Kings',codex:'Codex'};
+  const enabled={base:true,pok:document.getElementById('inc-pok').checked,codex:document.getElementById('inc-codex').checked};
+  const hiddenNotes=Object.keys(expansionNames).filter(x=>!enabled[x]).map(x=>{
+    const hidden=names.filter(n=>FACTIONS[n]&&FACTIONS[n].expansion===x);
+    return hidden.length?` ${hidden.join(', ')} only ${hidden.length>1?'appear':'appears'} once ${expansionNames[x]} is enabled.`:'';
+  });
+  document.getElementById('ban-note').innerHTML=`<div class="note-msg">Banned from the Trophy Hall: <strong>${names.join(', ')}</strong>.`+
+    hiddenNotes.join('')+`</div>`;
+  clearPlaqueSelection();
+  showTab('draft',document.querySelector('.tab-btn[data-tab="draft"]'));
+}
+
+/* The plaque generator has no tab of its own — it opens from the Trophy Hall */
+function openPlaqueGenerator(){
+  showTab('plaque',document.querySelector('.tab-btn[data-tab="trophy"]'));
+  window.scrollTo(0,0);
+}
+function closePlaqueGenerator(){
+  showTab('trophy',document.querySelector('.tab-btn[data-tab="trophy"]'));
 }
 
 function settingsToHash(){
@@ -442,29 +661,32 @@ function selectPlaque(rnd){
   const slot=document.getElementById('slot-'+rnd);if(slot)slot.classList.add('active');
   const detail=document.getElementById('plaque-detail');
   const meta=ROUND_META[rnd];
+  const faction=factionNameByIcon(meta.winner_icon);
   detail.innerHTML=`
     <div class="plaque-svg-wrap" id="svg-wrap-${rnd}">
-      <div style="font-size:.72rem;color:#888;letter-spacing:.1em">Loading ${rnd}.svg&hellip;</div>
+      <div class="plaque-loading">Loading ${rnd}.svg&hellip;</div>
     </div>
-    ${meta?`
     <div class="plaque-meta">
-      <img class="plaque-meta-icon" src="${blackPath(meta.winner_icon)}" alt="${meta.winner_icon}" onerror="this.style.display='none'">
+      <img class="plaque-meta-icon" src="${colorPathByIcon(meta.winner_icon)}" alt="" onerror="this.style.display='none'">
       <div>
         <div class="plaque-meta-winner">${meta.winner}</div>
-        <div class="plaque-meta-date">&#9632; ${meta.date} &nbsp;&bull;&nbsp; ${rnd}</div>
+        <div class="plaque-meta-faction">${faction}</div>
+        <div class="plaque-meta-date">${meta.date} &nbsp;&middot;&nbsp; ${rnd}</div>
       </div>
     </div>
     <div class="plaque-runners">
       <div class="runners-label">Runner-ups</div>
       <div class="runner-chips">
-        ${meta.runners.map(r=>{
-          const fe=Object.entries(FACTIONS).find(([,d])=>d.black.startsWith(r));
-          return `<div class="runner-chip">
-            <img src="${blackPath(r)}" alt="${r}" onerror="this.style.display='none'">
-            <span>${fe?fe[0]:r}</span></div>`;
-        }).join('')}
+        ${meta.runners.map(r=>`<div class="runner-chip">
+            <img src="${colorPathByIcon(r)}" alt="" onerror="this.style.display='none'">
+            <span>${factionNameByIcon(r)}</span></div>`).join('')}
       </div>
-    </div>`:''}`;
+    </div>
+    <div class="plaque-actions">
+      <button class="btn btn-danger" type="button" id="detail-ban-btn" data-rnd="${rnd}"></button>
+    </div>`;
+  document.getElementById('detail-ban-btn').onclick=()=>togglePlaqueSelection(rnd);
+  refreshPlaqueSelection();
 
   fetch(OUTPUTS_DIR+rnd+'.svg')
     .then(r=>{if(!r.ok)throw new Error(r.status);return r.text()})
@@ -474,16 +696,117 @@ function selectPlaque(rnd){
       const doc=parser.parseFromString(svgText,'image/svg+xml');
       const svgEl=doc.querySelector('svg');
       if(svgEl){
+        /* generate.py sizes plaques in mm with no viewBox — derive one so the plaque scales to fit */
+        if(!svgEl.getAttribute('viewBox')){
+          const toPx=v=>parseFloat(v)*(/mm$/.test(v)?96/25.4:1);
+          const w=toPx(svgEl.getAttribute('width')||''),h=toPx(svgEl.getAttribute('height')||'');
+          if(w&&h)svgEl.setAttribute('viewBox',`0 0 ${w} ${h}`);
+        }
         svgEl.removeAttribute('width');svgEl.removeAttribute('height');
-        svgEl.style.cssText='max-width:100%;height:auto;display:block';
         wrap.innerHTML='';wrap.appendChild(svgEl);
       }
     })
     .catch(()=>{
       const wrap=document.getElementById('svg-wrap-'+rnd);
-      if(wrap)wrap.innerHTML=`<div style="font-size:.7rem;color:#888;letter-spacing:.08em">Could not load ${rnd}.svg</div>`;
+      if(wrap)wrap.innerHTML=`<div class="plaque-loading">Could not load ${rnd}.svg</div>`;
     });
 }
+
+/* Trophy Hall stats — every round has four players: the winner plus three runner-ups */
+function factionStats(){
+  const stats={};
+  ROUND_FILES.forEach(rnd=>{
+    const m=ROUND_META[rnd];
+    [m.winner_icon,...m.runners].forEach((icon,i)=>{
+      const name=factionNameByIcon(icon);
+      const s=stats[name]||(stats[name]={name,icon,played:0,won:0,rounds:[]});
+      s.played++;s.rounds.push(rnd);
+      if(i===0)s.won++;
+    });
+  });
+  return Object.values(stats).sort((a,b)=>b.played-a.played||b.won-a.won||a.name.localeCompare(b.name));
+}
+
+function namesWithMax(list,key){
+  const max=Math.max(...list.map(x=>x[key]));
+  return {max,names:list.filter(x=>x[key]===max).map(x=>x.name)};
+}
+function tieLabel(names){
+  return names.length<=3?names.join(', '):`${names.length} tied`;
+}
+const plural=(n,word)=>`${n} ${word}${n===1?'':'s'}`;
+
+function buildStats(){
+  const rounds=ROUND_FILES.length;
+  if(!rounds)return;
+  const factions=factionStats();
+
+  const champs={};
+  ROUND_FILES.forEach(r=>{const w=ROUND_META[r].winner;champs[w]=(champs[w]||0)+1});
+  const champList=Object.entries(champs).map(([name,wins])=>({name,wins}))
+    .sort((a,b)=>b.wins-a.wins||a.name.localeCompare(b.name));
+
+  const mostPicked=namesWithMax(factions,'played');
+  const topChamp=namesWithMax(champList,'wins');
+  document.getElementById('stat-tiles').innerHTML=[
+    ['Rounds played',rounds,`${rounds*4} faction picks`],
+    ['Factions fielded',factions.length,`of ${Object.keys(FACTIONS).length} available`],
+    ['Most picked faction',tieLabel(mostPicked.names),`in ${mostPicked.max} of ${rounds} rounds`],
+    ['Most wins',tieLabel(topChamp.names),plural(topChamp.max,'win')+(topChamp.names.length>1?' each':'')],
+  ].map(([label,value,sub])=>`<div class="stat-tile">
+      <div class="stat-label">${label}</div>
+      <div class="stat-value${typeof value==='number'?'':' small'}">${value}</div>
+      <div class="stat-sub">${sub}</div>
+    </div>`).join('');
+
+  const maxPlayed=mostPicked.max;
+  const chart=document.getElementById('faction-chart');
+  chart.innerHTML=factions.map(f=>{
+    const lost=f.played-f.won;
+    return `<div class="freq-row" tabindex="0" data-name="${f.name}"
+        aria-label="${f.name}: played ${f.played}, won ${f.won}">
+      <div class="freq-name"><img src="${colorPathByIcon(f.icon)}" alt="" onerror="this.style.visibility='hidden'"><span>${f.name}</span></div>
+      <div class="freq-track" style="--tick:${100/maxPlayed}%">
+        ${f.won?`<div class="freq-seg won" style="width:calc(${f.won/maxPlayed*100}% - ${lost?1:0}px)"></div>`:''}
+        ${lost?`<div class="freq-seg played" style="width:calc(${lost/maxPlayed*100}% - ${f.won?1:0}px)"></div>`:''}
+      </div>
+      <div class="freq-nums"><b>${f.played}</b> played &middot; <b>${f.won}</b> won</div>
+    </div>`;
+  }).join('');
+  const byName=Object.fromEntries(factions.map(f=>[f.name,f]));
+  chart.querySelectorAll('.freq-row').forEach(row=>{
+    const f=byName[row.dataset.name];
+    const html=`<strong>${f.name}</strong>
+      <div><i style="background:var(--series-played)"></i>Played in ${f.played} of ${rounds} rounds</div>
+      <div><i style="background:var(--series-won)"></i>${plural(f.won,'win')} &middot; ${Math.round(f.won/f.played*100)}% win rate</div>
+      <div style="color:var(--text-muted)">${f.rounds.join(', ')}</div>`;
+    row.onmousemove=e=>showChartTip(html,e.clientX,e.clientY);
+    row.onmouseleave=hideChartTip;
+    row.onfocus=()=>{const r=row.getBoundingClientRect();showChartTip(html,r.left+r.width/2,r.bottom)};
+    row.onblur=hideChartTip;
+  });
+
+  const maxWins=topChamp.max;
+  document.getElementById('champion-chart').innerHTML=champList.map(c=>`<div class="champ-row">
+      <span class="champ-name">${c.name}</span>
+      <span class="champ-track"><span class="champ-bar" style="width:${c.wins/maxWins*100}%"></span></span>
+      <span class="champ-count">${c.wins}</span>
+    </div>`).join('');
+
+  const unplayed=Object.keys(FACTIONS).filter(n=>!byName[n]).sort();
+  document.getElementById('unplayed-factions').innerHTML=unplayed.length
+    ?unplayed.map(n=>`<div class="runner-chip"><img src="${colorPath(n)}" alt="" onerror="this.style.display='none'"><span>${n}</span></div>`).join('')
+    :'<span class="stat-sub">Every faction has been played.</span>';
+}
+
+function showChartTip(html,x,y){
+  const tip=document.getElementById('chart-tip');
+  tip.innerHTML=html;tip.classList.add('show');
+  const w=tip.offsetWidth,h=tip.offsetHeight;
+  tip.style.left=Math.max(8,Math.min(x+14,window.innerWidth-w-8))+'px';
+  tip.style.top=(y+14+h>window.innerHeight?y-h-10:y+14)+'px';
+}
+function hideChartTip(){document.getElementById('chart-tip').classList.remove('show')}
 
 function loadRounds(){
   fetch(ROUNDS_FILE,{cache:'no-cache'})
@@ -492,11 +815,14 @@ function loadRounds(){
       ROUND_FILES=rounds.map(r=>r.id);
       ROUND_META=Object.fromEntries(rounds.map(r=>[r.id,r]));
       buildTrophySlots();
+      buildStats();
     })
     .catch(e=>{
       console.warn('Could not load '+ROUNDS_FILE,e);
-      document.getElementById('plaque-slots').innerHTML=
-        `<div style="font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;padding:.5rem 0">Could not load ${ROUNDS_FILE}</div>`;
+      /* Browsers block fetch() for pages opened straight from disk */
+      const fromDisk=!/^https?:$/.test(location.protocol);
+      document.getElementById('plaque-slots').innerHTML=`<div class="loading-note">Could not load ${ROUNDS_FILE}.`+
+        (fromDisk?` The page was opened from disk, so it can't read the rounds or plaques. Serve the folder instead, e.g. <code>python -m http.server</code>, and open <code>http://localhost:8000</code>.`:'')+`</div>`;
     });
 }
 loadRounds();
@@ -522,7 +848,7 @@ function buildBanGrid(){
 
 document.getElementById('inc-pok').addEventListener('change',buildBanGrid);
 document.getElementById('inc-codex').addEventListener('change',buildBanGrid);
-function clearBans(){banned.clear();document.querySelectorAll('.faction-chip').forEach(c=>c.classList.remove('banned'))}
+function clearBans(){banned.clear();document.querySelectorAll('.faction-chip').forEach(c=>c.classList.remove('banned'));document.getElementById('ban-note').innerHTML=''}
 buildBanGrid();
 
 /* Draft RNG */
@@ -585,6 +911,8 @@ function pyRandom(seed) {
 	}
   };
 }
+/* Player accent colours borrowed from the eight strategy cards */
+const STRATEGY_COLOURS=['#d8412f','#ea8a2a','#e6c33a','#3da35a','#2aa69a','#3d7fd3','#3150b3','#7c4cb8'];
 function runDraft(){
   const players=parseInt(document.getElementById('player-count').value);
   const choices=parseInt(document.getElementById('choices-count').value);
@@ -614,7 +942,7 @@ function runDraft(){
     const picks=shuffled.slice(i*choices,(i+1)*choices);
     const isSpeaker=speakerIdx===i;
     const url='https://ti4.basicallyfine.com/factions/'+picks.map(f=>FACTIONS[f].slug).join(',')+';ti-c3';
-    html+=`<div class="player-card${isSpeaker?' speaker':''}">
+    html+=`<div class="player-card${isSpeaker?' speaker':''}" style="--accent:${STRATEGY_COLOURS[i%STRATEGY_COLOURS.length]}">
       <div class="player-header">
         <span class="player-name">${name}</span>
         ${isSpeaker?'<span class="speaker-badge">&#9733; Speaker</span>':''}

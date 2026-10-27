@@ -137,18 +137,51 @@ def generate_trophy_plaque(winner, date, winner_icon, runner_up_icons, output_fi
     dwg.save()
     print_info(f"Plaque saved as {output_file}")
 
+def generate_from_rounds_file(rounds_file, force=False):
+    """Generate a plaque for every round in the rounds file that doesn't already have one."""
+    import json
+    try:
+        rounds = json.loads(Path(rounds_file).read_text(encoding="utf-8"))
+    except Exception as e:
+        print_fatal_error(f"Could not read {rounds_file}: {e}")
+
+    for rnd in rounds:
+        output_path = OUTPUT_DIR / f"{rnd['id']}.svg"
+        if output_path.exists() and not force:
+            print_info(f"Skipping {rnd['id']} - {output_path} already exists")
+            continue
+        generate_trophy_plaque(
+            winner=rnd["winner"],
+            date=rnd["date"],
+            winner_icon=rnd["winner_icon"],
+            runner_up_icons=rnd["runners"],
+            output_file=output_path
+        )
+
 def main():
     print_header(f"Script by: {AUTHOR}{NEWLN}   {EX_USAGE}")
     print_separator()
     
     parser = argparse.ArgumentParser(description="Generate a TI4 trophy plaque.")
-    parser.add_argument("-w", "--winner", required=True, help="Winner's name")
-    parser.add_argument("-d", "--date", required=True, help="Date of the event")
-    parser.add_argument("-i", "--winner-icon", required=True, help="Winner's race icon")
-    parser.add_argument("-r", "--runner-up-icons", nargs="+", required=True, help="Runner-up race icons")
-    parser.add_argument("-o", "--output-file", required=True, help="Output filename (without extension)")
+    parser.add_argument("-w", "--winner", help="Winner's name")
+    parser.add_argument("-d", "--date", help="Date of the event")
+    parser.add_argument("-i", "--winner-icon", help="Winner's race icon")
+    parser.add_argument("-r", "--runner-up-icons", nargs="+", help="Runner-up race icons")
+    parser.add_argument("-o", "--output-file", help="Output filename (without extension)")
+    parser.add_argument("--rounds-file", help="Generate missing plaques for every round in this JSON file (e.g. rounds.json)")
+    parser.add_argument("--force", action="store_true", help="With --rounds-file, regenerate plaques that already exist")
 
     args = parser.parse_args()
+
+    if args.rounds_file:
+        generate_from_rounds_file(args.rounds_file, force=args.force)
+        print_separator()
+        print_success("Script reached the end.")
+        return
+
+    missing = [f"--{n.replace('_', '-')}" for n in ("winner", "date", "winner_icon", "runner_up_icons", "output_file") if not getattr(args, n)]
+    if missing:
+        parser.error(f"the following arguments are required: {', '.join(missing)}")
 
     output_path = OUTPUT_DIR / f"{args.output_file}.svg"
 

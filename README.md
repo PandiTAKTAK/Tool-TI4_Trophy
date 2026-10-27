@@ -22,3 +22,15 @@ Generate TI4 winner plaques for engraving
 Call script: `python generate.py -w DONKEY -d DD-MM-YYYY -i Arborec -r Creuss Xxcha Nekro -o filename` _or_ run GH action
 
 N.B. You only need to use the first unique part of the name, e.g. Jol will match to Jol Nar.
+
+## Adding a round to the Trophy Hall
+
+The Trophy Hall reads its rounds from [`rounds.json`](./rounds.json). To add a game, append an entry:
+
+```json
+{"id": "Rnd6", "winner": "DONKEY", "winner_icon": "Arborec", "date": "DD-MM-YYYY", "runners": ["Creuss", "Xxcha", "Nekro"]}
+```
+
+Push the change to `develop` or `trunk`. The _Sync Trophy Hall Rounds_ action generates `outputs/<id>.svg` for any round without a plaque and commits it back.
+
+To do the same locally: `python generate.py --rounds-file rounds.json` (add `--force` to regenerate existing plaques).

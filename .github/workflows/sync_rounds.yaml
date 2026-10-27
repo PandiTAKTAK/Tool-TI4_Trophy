@@ -1,0 +1,47 @@
+name: Sync Trophy Hall Rounds
+
+# Add a new round by appending an entry to rounds.json and pushing.
+# This generates outputs/<id>.svg for any round that doesn't have a plaque yet
+# and commits it back, so the Trophy Hall picks it up on the next Pages deploy.
+
+on:
+  push:
+    branches: [develop, trunk]
+    paths:
+      - rounds.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install svgwrite
+
+      - name: Generate missing plaques
+        run: python generate.py --rounds-file rounds.json
+
+      - name: Commit new plaques
+        run: |
+          git add outputs/*.svg
+          if git diff --cached --quiet; then
+            echo "No new plaques to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Generate plaques from rounds.json"
+          git push
